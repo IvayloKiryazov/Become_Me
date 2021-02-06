@@ -12,7 +12,7 @@ pub struct Square {
     pub owner: String,
     pub population: i32,
     pub rect_obj: Rect,
-    pub color: i32,
+    pub color: sdl2::pixels::Color,
     pub searched: bool,
     pub can_create_on: bool,
     pub i: i32,
@@ -23,16 +23,11 @@ pub struct Square {
 type Row = Vec<Square>;
 
 impl Square {
-    pub fn new(
-        rect_obj: Rect,
-        color: i32,
-        i: i32,
-        j: i32,
-    ) -> Self {
+    pub fn new(place_x: i32, place_y: i32, color: sdl2::pixels::Color, i: i32, j: i32) -> Self {
         let res = Square {
             owner: "Free Men".to_string(),
             population: 10,
-            rect_obj: rect_obj,
+            rect_obj: Rect::new(place_x, place_y, 40, 40),
             color: color,
             searched: false,
             can_create_on: true,
@@ -61,16 +56,26 @@ pub fn main() {
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let rect_width = 40; //32 columns
-    let rect_height = 40; //18 rows
-
-    let rect = Rect::new(1, 0, rect_width, rect_height);
-
+    //let rect_width = 40; //32 columns
+    //let rect_height = 40; //18 rows
+    let mut place_x = 400;
+    let mut place_y = 0;
     let mut map: Vec<Row> = Vec::new();
+    for i in 1..18 {
+        place_x = 400;
+        let mut row = Row::new();
+        for j in 1..18 {
+            let rect = Square::new(place_x, place_y, Color::RGB(255, 64, 0), i, j);
+            canvas.set_draw_color(rect.color);
+            canvas.draw_rect(rect.rect_obj).unwrap();
+            canvas.fill_rect(rect.rect_obj).unwrap();
+            row.push(rect);
+            place_x += 45;
+        }
+        map.push(row);
+        place_y += 45
+    }
 
-    canvas.set_draw_color(Color::RGB(255, 64, 0));
-    canvas.draw_rect(rect).unwrap();
-    canvas.fill_rect(rect).unwrap();
 
     'running: loop {
         canvas.set_draw_color(Color::RGB(0, 64, 255));
