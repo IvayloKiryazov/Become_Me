@@ -4,3 +4,6 @@ version = "0.1.0"
 
 [dependencies]
 sdl2 = "0.34"
+gfx = "0.18"
+gfx_glyph = "0.6.2"
+ggez = "0.5.1"
