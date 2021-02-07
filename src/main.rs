@@ -2,6 +2,9 @@ extern crate ggez;
 
 use ggez::graphics::{Color, DrawMode, DrawParam};
 use ggez::graphics::Rect;
+use ggez::event::{self, EventHandler};
+use ggez::{graphics, Context, ContextBuilder, GameResult};
+
 
 //Square is the smallest structural point of the game.
 //It's the tiles that make up the battlefield.
@@ -29,7 +32,7 @@ impl Square {
             ctx,
             graphics::DrawMode::fill(),
             rect,
-            graphics::Color::new(1.0, 0.0, 0.0, 1.0),
+            color,
         );
         let res = Square {
             owner: "Free Men".to_string(),
@@ -47,20 +50,6 @@ impl Square {
     }
 }
 
-use ggez::event::{self, EventHandler};
-use ggez::{graphics, Context, ContextBuilder, GameResult};
-
-struct MainState {
-    pos_x: f32,
-}
-
-impl MainState {
-    fn new() -> GameResult<MainState> {
-        let s = MainState { pos_x: 0.0 };
-        Ok(s)
-    }
-}
-
 fn main() {
     // Make a Context.
     let (ctx, event_loop) = &mut ggez::ContextBuilder::new("Become me", "aa")
@@ -72,9 +61,9 @@ fn main() {
     // Usually, you should provide it with the Context object to
     // use when setting your game up.
     let mut my_game = MyGame::new(ctx);
-    let state = MainState::new();
     // Run!
-    event::run(ctx, event_loop, &mut my_game);
+    //error handle
+    event::run(ctx, event_loop, &mut my_game).unwrap();
 }
 
 struct MyGame {
@@ -90,6 +79,7 @@ impl MyGame {
     }
 }
 
+
 impl EventHandler for MyGame {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         // Update code here...
@@ -101,29 +91,98 @@ impl EventHandler for MyGame {
 
         //let rect_width = 40; //32 columns
         //let rect_height = 40; //18 rows
-        let mut place_x = 400.0;
+        let mut place_x = 560.0;
         let mut place_y = 0.0;
         let mut map: Vec<Row> = Vec::new();
         for i in 1..18 {
-            place_x = 400.0;
+            place_x = 560.0;
             let mut row = Row::new();
             for j in 1..18 {
-                let rect = Square::new(ctx,place_x, place_y, Color::new(1.0, 0.0, 0.0, 1.0), i, j);
+                let rect = Square::new(ctx,place_x, place_y, RED, i, j);
                 graphics::draw(ctx, &rect.rect_mesh, DrawParam::default())?;
+                let mut scoreboard_text = graphics::Text::new(format!("{}", rect.population));
+                scoreboard_text.set_font(graphics::Font::default(), graphics::Scale::uniform(25.0));
+        
+                let coords = [place_x, place_y];
+        
+                let params = graphics::DrawParam::default().dest(coords);
+                graphics::draw(ctx, &scoreboard_text, params).expect("error drawing scoreboard text");
+
                 row.push(rect);
                 place_x += 45.0;
             }
             map.push(row);
             place_y += 45.0;
         }
-        let mut scoreboard_text = graphics::Text::new(format!("L: {} \t R: {}", 1, 2));
-        scoreboard_text.set_font(graphics::Font::default(), graphics::Scale::uniform(10.0));
 
-        let coords = [1280.0 / 2.0 - scoreboard_text.width(ctx) as f32 / 2.0, 20.0];
-
-        let params = graphics::DrawParam::default().dest(coords);
-        graphics::draw(ctx, &scoreboard_text, params).expect("error drawing scoreboard text");
 
         graphics::present(ctx)
     }
 }
+
+//TODO get these their own place
+
+
+/// White
+pub const WHITE: Color = Color {
+    r: 1.0,
+    g: 1.0,
+    b: 1.0,
+    a: 1.0,
+};
+
+/// Black
+pub const BLACK: Color = Color {
+    r: 0.0,
+    g: 0.0,
+    b: 0.0,
+    a: 1.0,
+};
+
+/// Red
+pub const RED: Color = Color {
+    r: 1.0,
+    g: 0.0,
+    b: 0.0,
+    a: 1.0,
+};
+
+/// Green
+pub const GREEN: Color = Color {
+    r: 0.0,
+    g: 1.0,
+    b: 0.0,
+    a: 1.0,
+};
+
+/// Blue
+pub const BLUE: Color = Color {
+    r: 0.0,
+    g: 0.0,
+    b: 1.0,
+    a: 1.0,
+};
+
+/// Cyan
+pub const CYAN: Color = Color {
+    r: 0.0,
+    g: 1.0,
+    b: 1.0,
+    a: 1.0,
+};
+
+/// Magenta
+pub const MAGENTA: Color = Color {
+    r: 1.0,
+    g: 0.0,
+    b: 1.0,
+    a: 1.0,
+};
+
+/// Yellow
+pub const YELLOW: Color = Color {
+    r: 1.0,
+    g: 1.0,
+    b: 0.0,
+    a: 1.0,
+};
