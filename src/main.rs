@@ -1,16 +1,17 @@
 extern crate ggez;
+extern crate rand;
 
-use ggez::graphics::{Color, DrawMode, DrawParam};
-use ggez::graphics::Rect;
 use ggez::event::{self, EventHandler};
+use ggez::graphics::Rect;
+use ggez::graphics::{Color, DrawMode, DrawParam};
 use ggez::{graphics, Context, ContextBuilder, GameResult};
+use rand::{thread_rng, Rng};
 
-
-//Square is the smallest structural point of the game.
+//Square is the smallest structural pou32 of the game.
 //It's the tiles that make up the battlefield.
 pub struct Square {
     pub owner: String,
-    pub population: i32,
+    pub population: u32,
     pub rect_obj: Rect,
     pub rect_mesh: graphics::Mesh,
     pub color: ggez::graphics::Color,
@@ -24,19 +25,24 @@ pub struct Square {
 type Row = Vec<Square>;
 
 impl Square {
-    pub fn new(ctx: &mut Context, place_x: f32, place_y: f32, color: ggez::graphics::Color, i: i32, j: i32) -> Self {
-
+    pub fn new(
+        ctx: &mut Context,
+        place_x: f32,
+        place_y: f32,
+        color: ggez::graphics::Color,
+        i: i32,
+        j: i32,
+    ) -> Self {
         let rect = graphics::Rect::new(place_x, place_y, 40.0, 40.0);
         //error handle
-        let r = graphics::Mesh::new_rectangle(
-            ctx,
-            graphics::DrawMode::fill(),
-            rect,
-            color,
-        );
+        let r = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color);
+        //let mut rng = rand::thread_rng();
+        let mut rng = thread_rng();
+        // Exclusive range
+        let y: u32 = rng.gen_range(0..10);
         let res = Square {
             owner: "Free Men".to_string(),
-            population: 10,
+            population: y,
             rect_obj: rect,
             rect_mesh: r.unwrap(),
             color: color,
@@ -48,6 +54,22 @@ impl Square {
         };
         res
     }
+}
+
+pub struct Leader {
+    pub name: String,
+    pub influence: u32,
+    pub science: u32,
+    pub fertility: u32,
+    pub diplomacy: u32,
+    pub mastery: u32,
+    pub population: u32,
+    pub search_counter: u32,
+    pub color: ggez::graphics::Color,
+    //pub OwnedTiles:      []OwnedPoint,
+    //pub Inventory:       []TempItem,
+    pub inventory_size: u32,
+    pub artefact_counter: u32,
 }
 
 fn main() {
@@ -79,7 +101,6 @@ impl MyGame {
     }
 }
 
-
 impl EventHandler for MyGame {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         // Update code here...
@@ -98,15 +119,16 @@ impl EventHandler for MyGame {
             place_x = 560.0;
             let mut row = Row::new();
             for j in 1..18 {
-                let rect = Square::new(ctx,place_x, place_y, RED, i, j);
+                let rect = Square::new(ctx, place_x, place_y, RED, i, j);
                 graphics::draw(ctx, &rect.rect_mesh, DrawParam::default())?;
                 let mut scoreboard_text = graphics::Text::new(format!("{}", rect.population));
                 scoreboard_text.set_font(graphics::Font::default(), graphics::Scale::uniform(25.0));
-        
+
                 let coords = [place_x, place_y];
-        
+
                 let params = graphics::DrawParam::default().dest(coords);
-                graphics::draw(ctx, &scoreboard_text, params).expect("error drawing scoreboard text");
+                graphics::draw(ctx, &scoreboard_text, params)
+                    .expect("error drawing scoreboard text");
 
                 row.push(rect);
                 place_x += 45.0;
@@ -115,13 +137,11 @@ impl EventHandler for MyGame {
             place_y += 45.0;
         }
 
-
         graphics::present(ctx)
     }
 }
 
 //TODO get these their own place
-
 
 /// White
 pub const WHITE: Color = Color {
