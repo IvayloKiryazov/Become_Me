@@ -3,8 +3,8 @@ extern crate rand;
 
 use ggez::event::{self, EventHandler};
 use ggez::graphics::Rect;
-use ggez::graphics::{Color, DrawMode, DrawParam};
-use ggez::{graphics, Context, ContextBuilder, GameResult};
+use ggez::graphics::{Color, DrawParam};
+use ggez::{graphics, Context, GameResult};
 use rand::{thread_rng, Rng};
 
 //Square is the smallest structural pou32 of the game.
@@ -27,22 +27,18 @@ type Row = Vec<Square>;
 impl Square {
     pub fn new(
         ctx: &mut Context,
-        place_x: f32,
-        place_y: f32,
+        _place_x: f32,
+        _place_y: f32,
         color: ggez::graphics::Color,
         i: i32,
         j: i32,
     ) -> Self {
-        let rect = graphics::Rect::new(place_x, place_y, 40.0, 40.0);
+        let rect = graphics::Rect::new(_place_x, _place_y, 40.0, 40.0);
         //error handle
         let r = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color);
-        //let mut rng = rand::thread_rng();
-        let mut rng = thread_rng();
-        // Exclusive range
-        let y: u32 = rng.gen_range(0..10);
         let res = Square {
             owner: "Free Men".to_string(),
-            population: y,
+            population: 10,
             rect_obj: rect,
             rect_mesh: r.unwrap(),
             color: color,
@@ -72,6 +68,44 @@ pub struct Leader {
     pub artefact_counter: u32,
 }
 
+impl Leader {
+    pub fn new(name: String, color: ggez::graphics::Color) -> Self {
+        // Exclusive range
+        let res = Leader {
+            name: name,
+            influence: rng.gen_range(0..2),
+            science: rng.gen_range(0..2),
+            fertility: rng.gen_range(0..2),
+            diplomacy: rng.gen_range(0..2),
+            mastery: rng.gen_range(0..2),
+            population: 0,
+            search_counter: 0,
+            color: color,
+            //pub OwnedTiles:      []OwnedPoint,
+            //pub Inventory:       []TempItem,
+            inventory_size: 0,
+            artefact_counter: 0,
+        };
+        res
+    }
+}
+
+//endpoints is local for a reason.
+pub struct  Endpoint  {
+    pub x: i32,
+    pub y: i32,
+}
+impl Endpoint {
+    pub fn new(x: i32, y: i32) -> Self {
+        let res = Endpoint {
+            x: x,
+            y: y,
+        };
+        res
+    }
+}
+
+
 fn main() {
     // Make a Context.
     let (ctx, event_loop) = &mut ggez::ContextBuilder::new("Become me", "aa")
@@ -89,14 +123,39 @@ fn main() {
 }
 
 struct MyGame {
-    // Your state here...
+    pub map: Vec<Row>,
+    pub players: Vec<Leader>,
 }
 
 impl MyGame {
     pub fn new(_ctx: &mut Context) -> MyGame {
-        // Load/create resources such as images here.
+        let mut _place_x = 560.0;
+        let mut _place_y = 0.0;
+        let mut map: Vec<Row> = Vec::new();
+        let mut corners: Vec<Endpoint> = Vec::new();
+        
+        corners.push(Endpoint::new(0, 0));
+        corners.push(Endpoint::new(15, 0));
+        corners.push(Endpoint::new(0, 15));
+        corners.push(Endpoint::new(15, 15));
+        
+
+        for i in 1..18 {
+            _place_x = 560.0;
+            let mut row = Row::new();
+            for j in 1..18 {
+                let rect = Square::new(_ctx, _place_x, _place_y, RED, i, j);
+                row.push(rect);
+                _place_x += 45.0;
+            }
+            map.push(row);
+            _place_y += 45.0;
+        }
+
+        
         MyGame {
-            // ...
+            map : map,
+            players: vec![],
         }
     }
 }
@@ -109,32 +168,18 @@ impl EventHandler for MyGame {
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx, graphics::BLACK);
-
-        //let rect_width = 40; //32 columns
-        //let rect_height = 40; //18 rows
-        let mut place_x = 560.0;
-        let mut place_y = 0.0;
-        let mut map: Vec<Row> = Vec::new();
-        for i in 1..18 {
-            place_x = 560.0;
-            let mut row = Row::new();
-            for j in 1..18 {
-                let rect = Square::new(ctx, place_x, place_y, RED, i, j);
-                graphics::draw(ctx, &rect.rect_mesh, DrawParam::default())?;
-                let mut scoreboard_text = graphics::Text::new(format!("{}", rect.population));
+        for i in 0..17 {
+            for j in 0..17 {
+                graphics::draw(ctx, &self.map[i][j].rect_mesh, DrawParam::default())?;
+                let mut scoreboard_text = graphics::Text::new(format!("{}", self.map[i][j].population));
                 scoreboard_text.set_font(graphics::Font::default(), graphics::Scale::uniform(25.0));
 
-                let coords = [place_x, place_y];
+                let coords = [self.map[i][j].rect_obj.x, self.map[i][j].rect_obj.y];
 
                 let params = graphics::DrawParam::default().dest(coords);
                 graphics::draw(ctx, &scoreboard_text, params)
                     .expect("error drawing scoreboard text");
-
-                row.push(rect);
-                place_x += 45.0;
             }
-            map.push(row);
-            place_y += 45.0;
         }
 
         graphics::present(ctx)
