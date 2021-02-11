@@ -2,6 +2,7 @@ extern crate ggez;
 extern crate rand;
 
 use ggez::event::{self, EventHandler};
+use ggez::conf::{WindowSetup};
 use ggez::graphics::Rect;
 use ggez::graphics::{Color, DrawParam};
 use ggez::{graphics, Context, GameResult};
@@ -190,8 +191,68 @@ pub struct UI {
 impl UI {
     pub fn new(ctx: &mut Context, curr_player: Leader, curr_square: Square) -> Self {
         let mut actions = Vec::new();
-        let rect = Rectangle::new(ctx, 0.0, 200.0, 260.0, 260.0, "Move".to_string(), CYAN);
+        let rect = Rectangle::new(ctx, 0.0, 400.0, 200.0, 100.0, "Move".to_string(), CYAN);
         actions.push(rect);
+        let rect = Rectangle::new(ctx, 205.0, 400.0, 200.0, 100.0, "Search".to_string(), CYAN);
+        actions.push(rect);
+        let rect = Rectangle::new(ctx, 0.0, 505.0, 200.0, 100.0, "Create".to_string(), CYAN);
+        actions.push(rect);
+        let rect = Rectangle::new(
+            ctx,
+            205.0,
+            505.0,
+            200.0,
+            100.0,
+            "Populate".to_string(),
+            CYAN,
+        );
+        actions.push(rect);
+        let rect = Rectangle::new(ctx, 0.0, 610.0, 200.0, 100.0, "UseItem".to_string(), CYAN);
+        actions.push(rect);
+        let rect = Rectangle::new(
+            ctx,
+            205.0,
+            610.0,
+            200.0,
+            100.0,
+            "Time Left".to_string(),
+            CYAN,
+        );
+        actions.push(rect);
+
+        let rect = Rectangle::new(
+            ctx,
+            410.0,
+            400.0,
+            145.0,
+            315.0,
+            "Clicked on".to_string(),
+            BROWN,
+        );
+        actions.push(rect);
+
+        let rect = Rectangle::new(
+            ctx,
+            0.0,
+            0.0,
+            555.0,
+            345.0,
+            "Your stats:".to_string(),
+            BROWN,
+        );
+        actions.push(rect);
+
+        let rect = Rectangle::new(
+            ctx,
+            0.0,
+            200.0,
+            555.0,
+            145.0,
+            "Invetory:".to_string(),
+            PURPLE,
+        );
+        actions.push(rect);
+
 
         let res = UI {
             curr_player: curr_player,
@@ -203,7 +264,8 @@ impl UI {
 }
 
 fn main() {
-    let (ctx, event_loop) = &mut ggez::ContextBuilder::new("Become me", "aa")
+    let (ctx, event_loop) = &mut ggez::ContextBuilder::new("Become me", "Ivaylo Kiryazov")
+        .window_setup(WindowSetup::default().title("Become me!"))
         .window_mode(ggez::conf::WindowMode::default().dimensions(1280.0, 720.0))
         .build()
         .unwrap();
@@ -262,12 +324,12 @@ impl MyGame {
             players[pos].starting_village(_ctx, e.x as usize, e.y as usize, &mut map, pos);
         }
 
-        let mut ui = UI::new(_ctx, players[0].clone(), map[0][0].clone());
+        let mut _ui = UI::new(_ctx, players[0].clone(), map[0][0].clone());
 
         MyGame {
             map: map,
             players: players,
-            ui: ui,
+            ui: _ui,
         }
     }
 }
@@ -296,19 +358,21 @@ impl EventHandler for MyGame {
                 graphics::draw(ctx, &population, params).unwrap();
             }
         }
-        graphics::draw(ctx, &self.ui.actions[0].rect_mesh, DrawParam::default())?;
+        for (pos, _) in self.ui.actions.iter().enumerate() {
+            graphics::draw(ctx, &self.ui.actions[pos].rect_mesh, DrawParam::default())?;
 
-        let mut population = graphics::Text::new(format!("{}", self.ui.actions[0].text));
-        population.set_font(graphics::Font::default(), graphics::Scale::uniform(25.0));
+            let mut population = graphics::Text::new(format!("{}", self.ui.actions[pos].text));
+            population.set_font(graphics::Font::default(), graphics::Scale::uniform(30.0));
 
-        let coords = [
-            self.ui.actions[0].rect_obj.x + 5.0,
-            self.ui.actions[0].rect_obj.y + 5.0,
-        ];
+            let coords = [
+                self.ui.actions[pos].rect_obj.x + 5.0,
+                self.ui.actions[pos].rect_obj.y + 5.0,
+            ];
 
-        let params = graphics::DrawParam::default().dest(coords);
-        //err
-        graphics::draw(ctx, &population, params).unwrap();
+            let params = graphics::DrawParam::default().dest(coords);
+            //err
+            graphics::draw(ctx, &population, params).unwrap();
+        }
         graphics::present(ctx)
     }
 }
@@ -330,6 +394,23 @@ pub const BLACK: Color = Color {
     b: 0.0,
     a: 1.0,
 };
+
+/// brown
+pub const BROWN: Color = Color {
+    r: 0.7,
+    g: 0.4,
+    b: 0.2,
+    a: 1.0,
+};
+
+/// purple
+pub const PURPLE: Color = Color {
+    r: 0.6,
+    g: 0.4,
+    b: 0.8,
+    a: 1.0,
+};
+
 
 /// Red
 pub const RED: Color = Color {
