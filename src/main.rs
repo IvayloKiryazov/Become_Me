@@ -5,7 +5,7 @@ use ggez::event::{self, EventHandler};
 use ggez::graphics::Rect;
 use ggez::graphics::{Color, DrawParam};
 use ggez::{graphics, Context, GameResult};
-use rand::{thread_rng, Rng};
+use rand::Rng;
 
 //Square is the smallest structural pou32 of the game.
 //It's the tiles that make up the battlefield.
@@ -50,6 +50,10 @@ impl Square {
         };
         res
     }
+
+    pub fn change_color(&mut self, ctx: &mut Context, color: ggez::graphics::Color) {
+        self.rect_mesh = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), self.rect_obj, color).unwrap();
+    }
 }
 
 pub struct Leader {
@@ -70,6 +74,7 @@ pub struct Leader {
 
 impl Leader {
     pub fn new(name: String, color: ggez::graphics::Color) -> Self {
+        let mut rng = rand::thread_rng();
         // Exclusive range
         let res = Leader {
             name: name,
@@ -88,23 +93,60 @@ impl Leader {
         };
         res
     }
+
+    pub fn starting_village(
+        &mut self,
+        ctx: &mut Context,
+        x: usize,
+        y: usize,
+        map: &mut Vec<Row>,
+        direction: usize,
+    ) -> () {
+        let mut direction_vector: Vec<Endpoint> = Vec::new();
+        print!("{}{}{}", x, y, direction);
+        direction_vector.push(Endpoint::new(1, 1)); //left up corner
+        direction_vector.push(Endpoint::new(-1, 1)); //right up corner
+        direction_vector.push(Endpoint::new(1, -1)); //left down corner
+        direction_vector.push(Endpoint::new(-1, -1)); //right down corner
+
+        let mut column = y;
+        let mut row = x;
+        for i in 0..5 {
+            row = x;
+            for j in 0..5 {
+                map[column][row].owner = self.name.clone();
+                self.population += map[column][row].population;
+                /*player.OwnedTiles = append(player.OwnedTiles,
+                MakeOwnedPoint(column, row, map[column][row].RectObj.X,
+                    map[column][row].RectObj.Y));*/
+                map[column][row].change_color(ctx, self.color);
+                
+                if direction_vector[direction].x == -1 {
+                   row -= 1;
+                } else {
+                    row += 1;
+                }
+            }
+            if direction_vector[direction].y == -1 {
+                column -= 1;
+            } else {
+                column += 1;
+            }
+        }
+    }
 }
 
 //endpoints is local for a reason.
-pub struct  Endpoint  {
+pub struct Endpoint {
     pub x: i32,
     pub y: i32,
 }
 impl Endpoint {
     pub fn new(x: i32, y: i32) -> Self {
-        let res = Endpoint {
-            x: x,
-            y: y,
-        };
+        let res = Endpoint { x: x, y: y };
         res
     }
 }
-
 
 fn main() {
     // Make a Context.
@@ -133,12 +175,24 @@ impl MyGame {
         let mut _place_y = 0.0;
         let mut map: Vec<Row> = Vec::new();
         let mut corners: Vec<Endpoint> = Vec::new();
-        
+
         corners.push(Endpoint::new(0, 0));
         corners.push(Endpoint::new(15, 0));
         corners.push(Endpoint::new(0, 15));
         corners.push(Endpoint::new(15, 15));
-        
+
+        let mut players: Vec<Leader> = Vec::new();
+        let mut player_colors: Vec<Color> = Vec::new();
+
+        player_colors.push(BLUE);
+        player_colors.push(GREEN);
+        player_colors.push(CYAN);
+        player_colors.push(MAGENTA);
+
+        for i in 0..4 {
+            let player = Leader::new(format!("Player{}", i), player_colors[i]);
+            players.push(player);
+        }
 
         for i in 1..18 {
             _place_x = 560.0;
@@ -152,10 +206,13 @@ impl MyGame {
             _place_y += 45.0;
         }
 
-        
+        for (pos, e) in corners.iter().enumerate() {
+            players[pos].starting_village(_ctx, e.x as usize, e.y as usize, &mut map, pos);
+        }
+
         MyGame {
-            map : map,
-            players: vec![],
+            map: map,
+            players: players,
         }
     }
 }
@@ -171,7 +228,8 @@ impl EventHandler for MyGame {
         for i in 0..17 {
             for j in 0..17 {
                 graphics::draw(ctx, &self.map[i][j].rect_mesh, DrawParam::default())?;
-                let mut scoreboard_text = graphics::Text::new(format!("{}", self.map[i][j].population));
+                let mut scoreboard_text =
+                    graphics::Text::new(format!("{}", self.map[i][j].population));
                 scoreboard_text.set_font(graphics::Font::default(), graphics::Scale::uniform(25.0));
 
                 let coords = [self.map[i][j].rect_obj.x, self.map[i][j].rect_obj.y];
