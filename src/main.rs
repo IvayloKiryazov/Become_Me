@@ -1,6 +1,8 @@
 extern crate ggez;
 extern crate rand;
 
+
+
 use ggez::event::{self, EventHandler};
 use ggez::conf::{WindowSetup};
 use ggez::graphics::Rect;
@@ -189,13 +191,13 @@ pub struct UI {
 }
 
 impl UI {
-    pub fn new(ctx: &mut Context, curr_player: Leader, curr_square: Square) -> Self {
+    pub fn new(ctx: &mut Context, curr_player: Leader, curr_square: Square, color_pallete: Vec<Color>) -> Self {
         let mut actions = Vec::new();
-        let rect = Rectangle::new(ctx, 0.0, 400.0, 200.0, 100.0, "Move".to_string(), CYAN);
+        let rect = Rectangle::new(ctx, 0.0, 400.0, 200.0, 100.0, "Move".to_string(), color_pallete[CYAN]);
         actions.push(rect);
-        let rect = Rectangle::new(ctx, 205.0, 400.0, 200.0, 100.0, "Search".to_string(), CYAN);
+        let rect = Rectangle::new(ctx, 205.0, 400.0, 200.0, 100.0, "Search".to_string(), color_pallete[CYAN]);
         actions.push(rect);
-        let rect = Rectangle::new(ctx, 0.0, 505.0, 200.0, 100.0, "Create".to_string(), CYAN);
+        let rect = Rectangle::new(ctx, 0.0, 505.0, 200.0, 100.0, "Create".to_string(), color_pallete[CYAN]);
         actions.push(rect);
         let rect = Rectangle::new(
             ctx,
@@ -204,10 +206,10 @@ impl UI {
             200.0,
             100.0,
             "Populate".to_string(),
-            CYAN,
+            color_pallete[CYAN],
         );
         actions.push(rect);
-        let rect = Rectangle::new(ctx, 0.0, 610.0, 200.0, 100.0, "UseItem".to_string(), CYAN);
+        let rect = Rectangle::new(ctx, 0.0, 610.0, 200.0, 100.0, "UseItem".to_string(), color_pallete[CYAN]);
         actions.push(rect);
         let rect = Rectangle::new(
             ctx,
@@ -216,7 +218,7 @@ impl UI {
             200.0,
             100.0,
             "Time Left".to_string(),
-            CYAN,
+            color_pallete[CYAN],
         );
         actions.push(rect);
 
@@ -225,9 +227,20 @@ impl UI {
             410.0,
             400.0,
             145.0,
-            315.0,
-            "Clicked on".to_string(),
-            BROWN,
+            205.0,
+            "Tile stats".to_string(),
+            color_pallete[BROWN],
+        );
+        actions.push(rect);
+
+        let rect = Rectangle::new(
+            ctx,
+            410.0,
+            610.0,
+            145.0,
+            100.0,
+            "End Turn".to_string(),
+            color_pallete[PURPLE],
         );
         actions.push(rect);
 
@@ -236,9 +249,9 @@ impl UI {
             0.0,
             0.0,
             555.0,
-            345.0,
+            195.0,
             "Your stats:".to_string(),
-            BROWN,
+            color_pallete[BROWN],
         );
         actions.push(rect);
 
@@ -248,8 +261,8 @@ impl UI {
             200.0,
             555.0,
             145.0,
-            "Invetory:".to_string(),
-            PURPLE,
+            "Inventory:".to_string(),
+            color_pallete[PURPLE],
         );
         actions.push(rect);
 
@@ -280,10 +293,29 @@ struct MyGame {
     pub map: Vec<Row>,
     pub players: Vec<Leader>,
     pub ui: UI,
+    pub color_pallete: Vec<Color>,
 }
 
 impl MyGame {
     pub fn new(_ctx: &mut Context) -> MyGame {
+        let mut color_pallete: Vec<Color> = Vec::new();
+
+        let cyan = ggez::graphics::Color::from_rgb_u32(0x4D8AB5);
+        color_pallete.push(cyan);
+        let purple = ggez::graphics::Color::from_rgb_u32(0x330066);
+        color_pallete.push(purple);
+        let brown = ggez::graphics::Color::from_rgb_u32(0x4D1518);
+        color_pallete.push(brown);
+
+        let red = ggez::graphics::Color::from_rgb_u32(0xC72523);
+        color_pallete.push(red);
+        let green = ggez::graphics::Color::from_rgb_u32(0x35B535);
+        color_pallete.push(green);
+        let gray = ggez::graphics::Color::from_rgb_u32(0x6A6A6A);
+        color_pallete.push(gray);
+        let blue = ggez::graphics::Color::from_rgb_u32(0x2C2A89);
+        color_pallete.push(blue);
+
         let mut _place_x = 560.0;
         let mut _place_y = 0.0;
         let mut map: Vec<Row> = Vec::new();
@@ -292,11 +324,12 @@ impl MyGame {
             _place_x = 560.0;
             let mut row = Row::new();
             for j in 1..18 {
-                let rect = Square::new(_ctx, _place_x, _place_y, RED, i, j);
+                let rect = Square::new(_ctx, _place_x, _place_y, color_pallete[GRAY], i, j);
                 row.push(rect);
                 _place_x += 45.0;
             }
             map.push(row);
+         
             _place_y += 45.0;
         }
 
@@ -310,10 +343,10 @@ impl MyGame {
         let mut players: Vec<Leader> = Vec::new();
         let mut player_colors: Vec<Color> = Vec::new();
 
-        player_colors.push(BLUE);
-        player_colors.push(GREEN);
-        player_colors.push(CYAN);
-        player_colors.push(MAGENTA);
+        player_colors.push(color_pallete[BLUE]);
+        player_colors.push(color_pallete[GREEN]);
+        player_colors.push(color_pallete[CYAN]);
+        player_colors.push(color_pallete[RED]);
 
         for i in 0..4 {
             let player = Leader::new(format!("Player{}", i), player_colors[i]);
@@ -324,12 +357,13 @@ impl MyGame {
             players[pos].starting_village(_ctx, e.x as usize, e.y as usize, &mut map, pos);
         }
 
-        let mut _ui = UI::new(_ctx, players[0].clone(), map[0][0].clone());
+        let mut _ui = UI::new(_ctx, players[0].clone(), map[0][0].clone(), color_pallete.clone());
 
         MyGame {
             map: map,
             players: players,
             ui: _ui,
+            color_pallete: color_pallete,
         }
     }
 }
@@ -395,54 +429,15 @@ pub const BLACK: Color = Color {
     a: 1.0,
 };
 
-/// brown
-pub const BROWN: Color = Color {
-    r: 0.7,
-    g: 0.4,
-    b: 0.2,
-    a: 1.0,
-};
-
-/// purple
-pub const PURPLE: Color = Color {
-    r: 0.6,
-    g: 0.4,
-    b: 0.8,
-    a: 1.0,
-};
+pub const BLUE: usize = 6;
+pub const GRAY: usize = 5;
+pub const GREEN: usize = 4;
+pub const RED: usize = 3;
+pub const BROWN: usize = 2;
+pub const PURPLE: usize = 1;
+pub const CYAN: usize = 0;
 
 
-/// Red
-pub const RED: Color = Color {
-    r: 1.0,
-    g: 0.0,
-    b: 0.0,
-    a: 1.0,
-};
-
-/// Green
-pub const GREEN: Color = Color {
-    r: 0.0,
-    g: 1.0,
-    b: 0.0,
-    a: 1.0,
-};
-
-/// Blue
-pub const BLUE: Color = Color {
-    r: 0.0,
-    g: 0.0,
-    b: 1.0,
-    a: 1.0,
-};
-
-/// Cyan
-pub const CYAN: Color = Color {
-    r: 0.0,
-    g: 1.0,
-    b: 1.0,
-    a: 1.0,
-};
 
 /// Magenta
 pub const MAGENTA: Color = Color {
