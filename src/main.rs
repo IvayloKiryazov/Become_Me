@@ -1,14 +1,21 @@
 extern crate ggez;
 extern crate rand;
 
-
-
+use ggez::conf::WindowSetup;
 use ggez::event::{self, EventHandler};
-use ggez::conf::{WindowSetup};
 use ggez::graphics::Rect;
 use ggez::graphics::{Color, DrawParam};
 use ggez::{graphics, Context, GameResult};
 use rand::Rng;
+
+//TODO get these their own place
+pub const BLUE: usize = 6;
+pub const GRAY: usize = 5;
+pub const GREEN: usize = 4;
+pub const RED: usize = 3;
+pub const BROWN: usize = 2;
+pub const PURPLE: usize = 1;
+pub const CYAN: usize = 0;
 
 //Square is the smallest structural point of the game.
 //It's the tiles that make up the battlefield.
@@ -191,13 +198,42 @@ pub struct UI {
 }
 
 impl UI {
-    pub fn new(ctx: &mut Context, curr_player: Leader, curr_square: Square, color_pallete: Vec<Color>) -> Self {
+    pub fn new(
+        ctx: &mut Context,
+        curr_player: Leader,
+        curr_square: Square,
+        color_pallete: Vec<Color>,
+    ) -> Self {
         let mut actions = Vec::new();
-        let rect = Rectangle::new(ctx, 0.0, 400.0, 200.0, 100.0, "Move".to_string(), color_pallete[CYAN]);
+        let rect = Rectangle::new(
+            ctx,
+            0.0,
+            400.0,
+            200.0,
+            100.0,
+            "Move".to_string(),
+            color_pallete[CYAN],
+        );
         actions.push(rect);
-        let rect = Rectangle::new(ctx, 205.0, 400.0, 200.0, 100.0, "Search".to_string(), color_pallete[CYAN]);
+        let rect = Rectangle::new(
+            ctx,
+            205.0,
+            400.0,
+            200.0,
+            100.0,
+            "Search".to_string(),
+            color_pallete[CYAN],
+        );
         actions.push(rect);
-        let rect = Rectangle::new(ctx, 0.0, 505.0, 200.0, 100.0, "Create".to_string(), color_pallete[CYAN]);
+        let rect = Rectangle::new(
+            ctx,
+            0.0,
+            505.0,
+            200.0,
+            100.0,
+            "Create".to_string(),
+            color_pallete[CYAN],
+        );
         actions.push(rect);
         let rect = Rectangle::new(
             ctx,
@@ -209,7 +245,15 @@ impl UI {
             color_pallete[CYAN],
         );
         actions.push(rect);
-        let rect = Rectangle::new(ctx, 0.0, 610.0, 200.0, 100.0, "UseItem".to_string(), color_pallete[CYAN]);
+        let rect = Rectangle::new(
+            ctx,
+            0.0,
+            610.0,
+            200.0,
+            100.0,
+            "UseItem".to_string(),
+            color_pallete[CYAN],
+        );
         actions.push(rect);
         let rect = Rectangle::new(
             ctx,
@@ -265,7 +309,6 @@ impl UI {
             color_pallete[PURPLE],
         );
         actions.push(rect);
-
 
         let res = UI {
             curr_player: curr_player,
@@ -329,7 +372,7 @@ impl MyGame {
                 _place_x += 45.0;
             }
             map.push(row);
-         
+
             _place_y += 45.0;
         }
 
@@ -357,7 +400,12 @@ impl MyGame {
             players[pos].starting_village(_ctx, e.x as usize, e.y as usize, &mut map, pos);
         }
 
-        let mut _ui = UI::new(_ctx, players[0].clone(), map[0][0].clone(), color_pallete.clone());
+        let mut _ui = UI::new(
+            _ctx,
+            players[0].clone(),
+            map[0][0].clone(),
+            color_pallete.clone(),
+        );
 
         MyGame {
             map: map,
@@ -379,19 +427,9 @@ impl EventHandler for MyGame {
         for i in 0..17 {
             for j in 0..17 {
                 graphics::draw(ctx, &self.map[i][j].rect_mesh, DrawParam::default())?;
-                let mut population = graphics::Text::new(format!("{}", self.map[i][j].population));
-                population.set_font(graphics::Font::default(), graphics::Scale::uniform(25.0));
-
-                let coords = [
-                    self.map[i][j].rect_obj.x + 5.0,
-                    self.map[i][j].rect_obj.y + 5.0,
-                ];
-
-                let params = graphics::DrawParam::default().dest(coords);
-                //err
-                graphics::draw(ctx, &population, params).unwrap();
             }
         }
+
         for (pos, _) in self.ui.actions.iter().enumerate() {
             graphics::draw(ctx, &self.ui.actions[pos].rect_mesh, DrawParam::default())?;
 
@@ -410,47 +448,3 @@ impl EventHandler for MyGame {
         graphics::present(ctx)
     }
 }
-
-//TODO get these their own place
-
-/// White
-pub const WHITE: Color = Color {
-    r: 1.0,
-    g: 1.0,
-    b: 1.0,
-    a: 1.0,
-};
-
-/// Black
-pub const BLACK: Color = Color {
-    r: 0.0,
-    g: 0.0,
-    b: 0.0,
-    a: 1.0,
-};
-
-pub const BLUE: usize = 6;
-pub const GRAY: usize = 5;
-pub const GREEN: usize = 4;
-pub const RED: usize = 3;
-pub const BROWN: usize = 2;
-pub const PURPLE: usize = 1;
-pub const CYAN: usize = 0;
-
-
-
-/// Magenta
-pub const MAGENTA: Color = Color {
-    r: 1.0,
-    g: 0.0,
-    b: 1.0,
-    a: 1.0,
-};
-
-/// Yellow
-pub const YELLOW: Color = Color {
-    r: 1.0,
-    g: 1.0,
-    b: 0.0,
-    a: 1.0,
-};
