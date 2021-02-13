@@ -29,8 +29,8 @@ pub struct Square {
     pub color: ggez::graphics::Color,
     pub searched: bool,
     pub can_create_on: bool,
-    pub i: i32,
-    pub j: i32,
+    pub i: usize,
+    pub j: usize,
     pub usable: bool,
 }
 
@@ -42,14 +42,14 @@ impl Square {
         _place_x: f32,
         _place_y: f32,
         color: ggez::graphics::Color,
-        i: i32,
-        j: i32,
+        i: usize,
+        j: usize,
     ) -> Self {
         let rect = graphics::Rect::new(_place_x, _place_y, 40.0, 40.0);
         //error handle
         let r = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color);
         let res = Square {
-            owner: "Free Men".to_string(),
+            owner: "Ol'uns".to_string(),
             population: 10,
             rect_obj: rect,
             rect_mesh: r.unwrap(),
@@ -81,7 +81,7 @@ pub struct Leader {
     pub population: u32,
     pub search_counter: u32,
     pub color: ggez::graphics::Color,
-    //pub OwnedTiles:      []OwnedPoint,
+    pub owned_tiles: Vec<Position>,
     //pub Inventory:       []TempItem,
     pub inventory_size: u32,
     pub artefact_counter: u32,
@@ -100,7 +100,7 @@ impl Leader {
             population: 0,
             search_counter: 0,
             color: color,
-            //pub OwnedTiles:      []OwnedPoint,
+            owned_tiles: vec![],
             //pub Inventory:       []TempItem,
             inventory_size: 0,
             artefact_counter: 0,
@@ -130,9 +130,8 @@ impl Leader {
             for _j in 0..5 {
                 map[column][_row].owner = self.name.clone();
                 self.population += map[column][_row].population;
-                /*player.OwnedTiles = append(player.OwnedTiles,
-                MakeOwnedPoint(column, row, map[column][row].RectObj.X,
-                    map[column][row].RectObj.Y));*/
+                self.owned_tiles
+                    .push(Position::new(map[column][_row].i, map[column][_row].j));
                 map[column][_row].change_color(ctx, self.color);
 
                 if direction_vector[direction].x == -1 {
@@ -150,7 +149,7 @@ impl Leader {
     }
 }
 
-//just use point :)
+#[derive(Clone)]
 pub struct Endpoint {
     pub x: i32,
     pub y: i32,
@@ -163,6 +162,20 @@ impl Endpoint {
     }
 }
 
+#[derive(Clone)]
+pub struct Position {
+    pub x: usize,
+    pub y: usize,
+}
+
+impl Position {
+    pub fn new(x: usize, y: usize) -> Self {
+        let res = Position { x: x, y: y };
+        res
+    }
+}
+
+#[derive(Clone)]
 pub struct Rectangle {
     pub rect_obj: Rect,
     pub rect_mesh: graphics::Mesh,
@@ -339,6 +352,7 @@ struct MyGame {
     pub ui: UI,
     pub color_pallete: Vec<Color>,
     pub field_click: bool,
+    pub action: bool,
 }
 
 impl MyGame {
@@ -365,10 +379,10 @@ impl MyGame {
         let mut _place_y = 0.0;
         let mut map: Vec<Row> = Vec::new();
 
-        for i in 1..18 {
+        for i in 0..17 {
             _place_x = 560.0;
             let mut row = Row::new();
-            for j in 1..18 {
+            for j in 0..17 {
                 let rect = Square::new(_ctx, _place_x, _place_y, color_pallete[GRAY], i, j);
                 row.push(rect);
                 _place_x += 45.0;
@@ -415,8 +429,23 @@ impl MyGame {
             ui: _ui,
             color_pallete: color_pallete,
             field_click: false,
+            action: false,
         }
     }
+}
+
+pub fn mouse_clicked_on_action(actions: Vec<Rectangle>, x: f32, y: f32) -> Option<Rectangle> {
+    for i in 0..5 {
+        if x >= actions[i].rect_obj.x
+            && x <= actions[i].rect_obj.x + 200.0
+            && y >= actions[i].rect_obj.y
+            && y <= actions[i].rect_obj.y + 100.0
+        {
+            return Some(actions[i].clone());
+        }
+    }
+
+    return None;
 }
 
 pub fn mouse_clicked_on_field(map: Vec<Row>, x: f32, y: f32) -> Option<Square> {
@@ -439,14 +468,27 @@ pub fn mouse_clicked_on_field(map: Vec<Row>, x: f32, y: f32) -> Option<Square> {
     if row == 20 || column == 20 {
         return None;
     }
-    let res = map[row][column].clone();
-    Some(res)
+    Some(map[row][column].clone())
 }
 
 impl EventHandler for MyGame {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         if self.field_click {
-            self.ui.curr_square.color = self.color_pallete[BROWN];
+            self.map[self.ui.curr_square.i][self.ui.curr_square.j].color =
+                self.color_pallete[BROWN];
+            self.map[self.ui.curr_square.i][self.ui.curr_square.j].rect_mesh =
+                graphics::Mesh::new_rectangle(
+                    _ctx,
+                    graphics::DrawMode::fill(),
+                    self.ui.curr_square.rect_obj,
+                    self.color_pallete[BROWN],
+                )
+                .unwrap();
+            self.field_click = false;
+        }
+
+        if self.action {
+            self.action = false;
         }
         Ok(())
     }
@@ -501,7 +543,7 @@ impl EventHandler for MyGame {
         graphics::draw(ctx, &txt, params).unwrap();
 
         let mut txt =
-            graphics::Text::new(format!("Can crarft: {}", self.ui.curr_square.can_create_on));
+            graphics::Text::new(format!("Can craft: {}", self.ui.curr_square.can_create_on));
         txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
 
         let coords = [
@@ -537,6 +579,79 @@ impl EventHandler for MyGame {
         //err
         graphics::draw(ctx, &txt, params).unwrap();
 
+        let mut txt = graphics::Text::new(format!("Influence: {}", self.ui.curr_player.influence));
+        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
+
+        let coords = [
+            self.ui.actions[8].rect_obj.x + 5.0,
+            self.ui.actions[8].rect_obj.y + 40.0,
+        ];
+
+        let params = graphics::DrawParam::default().dest(coords);
+        //err
+        graphics::draw(ctx, &txt, params).unwrap();
+
+        let mut txt = graphics::Text::new(format!("Science: {}", self.ui.curr_player.science));
+        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
+
+        let coords = [
+            self.ui.actions[8].rect_obj.x + 5.0,
+            self.ui.actions[8].rect_obj.y + 65.0,
+        ];
+
+        let params = graphics::DrawParam::default().dest(coords);
+        //err
+        graphics::draw(ctx, &txt, params).unwrap();
+
+        let mut txt = graphics::Text::new(format!("Fertility: {}", self.ui.curr_player.fertility));
+        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
+
+        let coords = [
+            self.ui.actions[8].rect_obj.x + 5.0,
+            self.ui.actions[8].rect_obj.y + 90.0,
+        ];
+
+        let params = graphics::DrawParam::default().dest(coords);
+        //err
+        graphics::draw(ctx, &txt, params).unwrap();
+
+        let mut txt = graphics::Text::new(format!("Diplomacy: {}", self.ui.curr_player.diplomacy));
+        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
+
+        let coords = [
+            self.ui.actions[8].rect_obj.x + 5.0,
+            self.ui.actions[8].rect_obj.y + 115.0,
+        ];
+
+        let params = graphics::DrawParam::default().dest(coords);
+        //err
+        graphics::draw(ctx, &txt, params).unwrap();
+
+        let mut txt = graphics::Text::new(format!("Mastery: {}", self.ui.curr_player.mastery));
+        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
+
+        let coords = [
+            self.ui.actions[8].rect_obj.x + 5.0,
+            self.ui.actions[8].rect_obj.y + 140.0,
+        ];
+
+        let params = graphics::DrawParam::default().dest(coords);
+        //err
+        graphics::draw(ctx, &txt, params).unwrap();
+
+        let mut txt =
+            graphics::Text::new(format!("Population: {}", self.ui.curr_player.population));
+        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
+
+        let coords = [
+            self.ui.actions[8].rect_obj.x + 5.0,
+            self.ui.actions[8].rect_obj.y + 170.0,
+        ];
+
+        let params = graphics::DrawParam::default().dest(coords);
+        //err
+        graphics::draw(ctx, &txt, params).unwrap();
+
         graphics::present(ctx)
     }
 
@@ -552,6 +667,11 @@ impl EventHandler for MyGame {
             if cur_square.is_some() {
                 self.ui.curr_square = cur_square.unwrap();
                 self.field_click = true;
+            }
+
+            let action = mouse_clicked_on_action(self.ui.actions.clone(), _x, _y);
+            if action.is_some() {
+                self.action = true;
             }
         }
     }
