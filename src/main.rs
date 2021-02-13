@@ -30,7 +30,7 @@ pub struct Square {
     pub can_create_on: bool,
     pub i: i32,
     pub j: i32,
-    pub action_done: bool,
+    pub usable: bool,
 }
 
 type Row = Vec<Square>;
@@ -57,7 +57,7 @@ impl Square {
             can_create_on: true,
             i: i,
             j: j,
-            action_done: false,
+            usable: true,
         };
         res
     }
@@ -272,7 +272,7 @@ impl UI {
             400.0,
             145.0,
             205.0,
-            "Tile stats".to_string(),
+            "Tile stats:".to_string(),
             color_pallete[BROWN],
         );
         actions.push(rect);
@@ -416,6 +416,10 @@ impl MyGame {
     }
 }
 
+
+
+
+
 impl EventHandler for MyGame {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         // Update code here...
@@ -433,8 +437,8 @@ impl EventHandler for MyGame {
         for (pos, _) in self.ui.actions.iter().enumerate() {
             graphics::draw(ctx, &self.ui.actions[pos].rect_mesh, DrawParam::default())?;
 
-            let mut population = graphics::Text::new(format!("{}", self.ui.actions[pos].text));
-            population.set_font(graphics::Font::default(), graphics::Scale::uniform(30.0));
+            let mut txt = graphics::Text::new(format!("{}", self.ui.actions[pos].text));
+            txt.set_font(graphics::Font::default(), graphics::Scale::uniform(30.0));
 
             let coords = [
                 self.ui.actions[pos].rect_obj.x + 5.0,
@@ -443,8 +447,73 @@ impl EventHandler for MyGame {
 
             let params = graphics::DrawParam::default().dest(coords);
             //err
-            graphics::draw(ctx, &population, params).unwrap();
+            graphics::draw(ctx, &txt, params).unwrap();
         }
+
+        let mut txt = graphics::Text::new(format!("Owner: {}", self.ui.curr_square.owner));
+        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
+    
+        let coords = [
+            self.ui.actions[6].rect_obj.x + 5.0,
+            self.ui.actions[6].rect_obj.y + 40.0,
+        ];
+    
+        let params = graphics::DrawParam::default().dest(coords);
+        //err
+        graphics::draw(ctx, &txt, params).unwrap();
+    
+        let mut txt = graphics::Text::new(format!("Population: {}", self.ui.curr_square.population));
+        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
+    
+        let coords = [
+            self.ui.actions[6].rect_obj.x + 5.0,
+            self.ui.actions[6].rect_obj.y + 65.0,
+        ];
+    
+        let params = graphics::DrawParam::default().dest(coords);
+        //err
+        graphics::draw(ctx, &txt, params).unwrap();
+    
+        
+        let mut txt = graphics::Text::new(format!("Can crarft: {}", self.ui.curr_square.can_create_on));
+        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
+    
+        let coords = [
+            self.ui.actions[6].rect_obj.x + 5.0,
+            self.ui.actions[6].rect_obj.y + 90.0,
+        ];
+    
+        let params = graphics::DrawParam::default().dest(coords);
+        //err
+        graphics::draw(ctx, &txt, params).unwrap();
+    
+        
+        let mut txt = graphics::Text::new(format!("Usable: {}", self.ui.curr_square.usable));
+        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
+    
+        let coords = [
+            self.ui.actions[6].rect_obj.x + 5.0,
+            self.ui.actions[6].rect_obj.y + 115.0,
+        ];
+    
+        let params = graphics::DrawParam::default().dest(coords);
+        //err
+        graphics::draw(ctx, &txt, params).unwrap();
+    
+        let mut txt = graphics::Text::new(format!("Searched: {}", self.ui.curr_square.searched));
+        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
+    
+        let coords = [
+            self.ui.actions[6].rect_obj.x + 5.0,
+            self.ui.actions[6].rect_obj.y + 140.0,
+        ];
+    
+        let params = graphics::DrawParam::default().dest(coords);
+        //err
+        graphics::draw(ctx, &txt, params).unwrap();
+    
+        
+
         graphics::present(ctx)
     }
 }
