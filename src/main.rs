@@ -5,6 +5,7 @@ use ggez::conf::WindowSetup;
 use ggez::event::{self, EventHandler};
 use ggez::graphics::Rect;
 use ggez::graphics::{Color, DrawParam};
+use ggez::input::mouse::MouseButton;
 use ggez::{graphics, Context, GameResult};
 use rand::Rng;
 
@@ -337,6 +338,7 @@ struct MyGame {
     pub players: Vec<Leader>,
     pub ui: UI,
     pub color_pallete: Vec<Color>,
+    pub field_click: bool,
 }
 
 impl MyGame {
@@ -412,17 +414,40 @@ impl MyGame {
             players: players,
             ui: _ui,
             color_pallete: color_pallete,
+            field_click: false,
         }
     }
 }
 
+pub fn mouse_clicked_on_field(map: Vec<Row>, x: f32, y: f32) -> Option<Square> {
+    // TODO make size of map+ 1
+    let mut column = 20;
+    let mut row = 20;
+    for i in 0..17 {
+        if x >= map[0][i].rect_obj.x && x <= map[0][i].rect_obj.x + 40.0 {
+            column = i;
+            for j in 0..17 {
+                if y >= map[j][column].rect_obj.y && y <= map[j][column].rect_obj.y + 40.0 {
+                    row = j;
+                    break;
+                }
+            }
+            break;
+        }
+    }
 
-
-
+    if row == 20 || column == 20 {
+        return None;
+    }
+    let res = map[row][column].clone();
+    Some(res)
+}
 
 impl EventHandler for MyGame {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        // Update code here...
+        if self.field_click {
+            self.ui.curr_square.color = self.color_pallete[BROWN];
+        }
         Ok(())
     }
 
@@ -452,68 +477,82 @@ impl EventHandler for MyGame {
 
         let mut txt = graphics::Text::new(format!("Owner: {}", self.ui.curr_square.owner));
         txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-    
+
         let coords = [
             self.ui.actions[6].rect_obj.x + 5.0,
             self.ui.actions[6].rect_obj.y + 40.0,
         ];
-    
+
         let params = graphics::DrawParam::default().dest(coords);
         //err
         graphics::draw(ctx, &txt, params).unwrap();
-    
-        let mut txt = graphics::Text::new(format!("Population: {}", self.ui.curr_square.population));
+
+        let mut txt =
+            graphics::Text::new(format!("Population: {}", self.ui.curr_square.population));
         txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-    
+
         let coords = [
             self.ui.actions[6].rect_obj.x + 5.0,
             self.ui.actions[6].rect_obj.y + 65.0,
         ];
-    
+
         let params = graphics::DrawParam::default().dest(coords);
         //err
         graphics::draw(ctx, &txt, params).unwrap();
-    
-        
-        let mut txt = graphics::Text::new(format!("Can crarft: {}", self.ui.curr_square.can_create_on));
+
+        let mut txt =
+            graphics::Text::new(format!("Can crarft: {}", self.ui.curr_square.can_create_on));
         txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-    
+
         let coords = [
             self.ui.actions[6].rect_obj.x + 5.0,
             self.ui.actions[6].rect_obj.y + 90.0,
         ];
-    
+
         let params = graphics::DrawParam::default().dest(coords);
         //err
         graphics::draw(ctx, &txt, params).unwrap();
-    
-        
+
         let mut txt = graphics::Text::new(format!("Usable: {}", self.ui.curr_square.usable));
         txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-    
+
         let coords = [
             self.ui.actions[6].rect_obj.x + 5.0,
             self.ui.actions[6].rect_obj.y + 115.0,
         ];
-    
+
         let params = graphics::DrawParam::default().dest(coords);
         //err
         graphics::draw(ctx, &txt, params).unwrap();
-    
+
         let mut txt = graphics::Text::new(format!("Searched: {}", self.ui.curr_square.searched));
         txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-    
+
         let coords = [
             self.ui.actions[6].rect_obj.x + 5.0,
             self.ui.actions[6].rect_obj.y + 140.0,
         ];
-    
+
         let params = graphics::DrawParam::default().dest(coords);
         //err
         graphics::draw(ctx, &txt, params).unwrap();
-    
-        
 
         graphics::present(ctx)
+    }
+
+    fn mouse_button_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        _button: MouseButton,
+        _x: f32,
+        _y: f32,
+    ) {
+        if ggez::input::mouse::button_pressed(_ctx, _button) && _button == MouseButton::Left {
+            let cur_square = mouse_clicked_on_field(self.map.clone(), _x, _y);
+            if cur_square.is_some() {
+                self.ui.curr_square = cur_square.unwrap();
+                self.field_click = true;
+            }
+        }
     }
 }
