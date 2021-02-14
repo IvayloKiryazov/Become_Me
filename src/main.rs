@@ -10,6 +10,7 @@ use ggez::{graphics, Context, GameResult};
 use rand::Rng;
 
 //TODO get these their own place
+pub const YELLOW: usize = 7;
 pub const BLUE: usize = 6;
 pub const GRAY: usize = 5;
 pub const GREEN: usize = 4;
@@ -162,7 +163,7 @@ impl Endpoint {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -209,6 +210,7 @@ pub struct UI {
     pub curr_player: Leader,
     pub actions: Vec<Rectangle>,
     pub curr_square: Square,
+    pub prev_square: Square,
 }
 
 impl UI {
@@ -216,6 +218,7 @@ impl UI {
         ctx: &mut Context,
         curr_player: Leader,
         curr_square: Square,
+        prev_square: Square,
         color_pallete: Vec<Color>,
     ) -> Self {
         let mut actions = Vec::new();
@@ -328,6 +331,7 @@ impl UI {
             curr_player: curr_player,
             actions: actions,
             curr_square: curr_square,
+            prev_square: prev_square,
         };
         res
     }
@@ -352,7 +356,7 @@ struct MyGame {
     pub ui: UI,
     pub color_pallete: Vec<Color>,
     pub field_click: bool,
-    pub action: bool,
+    pub populate: bool,
 }
 
 impl MyGame {
@@ -374,6 +378,8 @@ impl MyGame {
         color_pallete.push(gray);
         let blue = ggez::graphics::Color::from_rgb_u32(0x2C2A89);
         color_pallete.push(blue);
+        let yellow = ggez::graphics::Color::from_rgb_u32(0xFBCA03);
+        color_pallete.push(yellow);
 
         let mut _place_x = 560.0;
         let mut _place_y = 0.0;
@@ -420,6 +426,7 @@ impl MyGame {
             _ctx,
             players[0].clone(),
             map[0][0].clone(),
+            map[0][0].clone(),
             color_pallete.clone(),
         );
 
@@ -429,7 +436,7 @@ impl MyGame {
             ui: _ui,
             color_pallete: color_pallete,
             field_click: false,
-            action: false,
+            populate: false,
         }
     }
 }
@@ -471,24 +478,69 @@ pub fn mouse_clicked_on_field(map: Vec<Row>, x: f32, y: f32) -> Option<Square> {
     Some(map[row][column].clone())
 }
 
+pub fn player_owned(map: Vec<Position>, position: Position) -> bool {
+    for  e in map.iter() {
+        if e == &position {
+          return true  
+        }
+    }
+
+    return false;
+}
+
+
+
 impl EventHandler for MyGame {
+    //TODO: make keyboard shortcuts
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        if self.field_click {
+        if self.field_click && player_owned(self.ui.curr_player.owned_tiles.clone(), Position::new(self.ui.curr_square.i,self.ui.curr_square.j)) {
             self.map[self.ui.curr_square.i][self.ui.curr_square.j].color =
-                self.color_pallete[BROWN];
+                self.color_pallete[YELLOW];
             self.map[self.ui.curr_square.i][self.ui.curr_square.j].rect_mesh =
                 graphics::Mesh::new_rectangle(
                     _ctx,
                     graphics::DrawMode::fill(),
                     self.ui.curr_square.rect_obj,
-                    self.color_pallete[BROWN],
+                    self.color_pallete[YELLOW],
                 )
                 .unwrap();
-            self.field_click = false;
+            self.map[self.ui.prev_square.i][self.ui.prev_square.j].color =
+                self.color_pallete[BROWN];
+            self.map[self.ui.prev_square.i][self.ui.prev_square.j].rect_mesh =
+                graphics::Mesh::new_rectangle(
+                    _ctx,
+                    graphics::DrawMode::fill(),
+                    self.ui.prev_square.rect_obj,
+                    self.ui.curr_player.color,
+                )
+                .unwrap();
+            //self.field_click = false;
         }
 
-        if self.action {
-            self.action = false;
+        if self.populate {
+            let i = self.ui.curr_square.i;
+            let j = self.ui.curr_square.j;
+            if self.field_click && player_owned(self.ui.curr_player.owned_tiles.clone(), Position::new(i, j)) {
+                if self.map[i][j].population < 50 {
+                    let increase = self.map[i][j].population / 2;
+                    if (self.map[i][j].population + increase) >= 50 {
+                        let diff = 50 - self.map[i][j].population;
+                        self.map[i][j].population = 50;
+                        self.ui.curr_player.population += diff;
+                    } else {
+                        self.map[i][j].population += increase;
+                        self.ui.curr_player.population += increase;
+                    }
+                    self.ui.curr_square.population = self.map[i][j].population;
+                    for (pos, _e) in self.players.clone().iter().enumerate() {
+                        if self.players[pos].name == self.ui.curr_player.name {
+                            self.players[pos].population = self.ui.curr_player.population;
+                        }
+                    }
+                }
+            }
+            self.populate = false;
+            self.field_click = false;
         }
         Ok(())
     }
@@ -665,13 +717,16 @@ impl EventHandler for MyGame {
         if ggez::input::mouse::button_pressed(_ctx, _button) && _button == MouseButton::Left {
             let cur_square = mouse_clicked_on_field(self.map.clone(), _x, _y);
             if cur_square.is_some() {
+                self.ui.prev_square = self.ui.curr_square.clone();
                 self.ui.curr_square = cur_square.unwrap();
                 self.field_click = true;
             }
 
             let action = mouse_clicked_on_action(self.ui.actions.clone(), _x, _y);
             if action.is_some() {
-                self.action = true;
+                if action.unwrap().text.contains("Populate"){
+                    self.populate = true;
+                }
             }
         }
     }
