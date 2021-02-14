@@ -65,6 +65,7 @@ impl Square {
     }
 
     pub fn change_color(&mut self, ctx: &mut Context, color: ggez::graphics::Color) {
+        self.color = color;
         self.rect_mesh =
             graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), self.rect_obj, color)
                 .unwrap();
@@ -211,6 +212,7 @@ pub struct UI {
     pub actions: Vec<Rectangle>,
     pub curr_square: Square,
     pub prev_square: Square,
+    pub prev_color: Color,
 }
 
 impl UI {
@@ -328,10 +330,11 @@ impl UI {
         actions.push(rect);
 
         let res = UI {
-            curr_player: curr_player,
+            curr_player: curr_player.clone(),
             actions: actions,
             curr_square: curr_square,
             prev_square: prev_square,
+            prev_color: curr_player.color,
         };
         res
     }
@@ -479,21 +482,29 @@ pub fn mouse_clicked_on_field(map: Vec<Row>, x: f32, y: f32) -> Option<Square> {
 }
 
 pub fn player_owned(map: Vec<Position>, position: Position) -> bool {
-    for  e in map.iter() {
+    for e in map.iter() {
         if e == &position {
-          return true  
+            return true;
         }
     }
 
     return false;
 }
 
-
-
 impl EventHandler for MyGame {
     //TODO: make keyboard shortcuts
+    //ТODO make stuff un-usable after they've been used
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        if self.field_click && player_owned(self.ui.curr_player.owned_tiles.clone(), Position::new(self.ui.curr_square.i,self.ui.curr_square.j)) {
+        if self.field_click {
+            self.map[self.ui.prev_square.i][self.ui.prev_square.j].color = self.ui.prev_color;
+            self.map[self.ui.prev_square.i][self.ui.prev_square.j].rect_mesh =
+                graphics::Mesh::new_rectangle(
+                    _ctx,
+                    graphics::DrawMode::fill(),
+                    self.ui.prev_square.rect_obj,
+                    self.ui.prev_color,
+                )
+                .unwrap();
             self.map[self.ui.curr_square.i][self.ui.curr_square.j].color =
                 self.color_pallete[YELLOW];
             self.map[self.ui.curr_square.i][self.ui.curr_square.j].rect_mesh =
@@ -504,23 +515,14 @@ impl EventHandler for MyGame {
                     self.color_pallete[YELLOW],
                 )
                 .unwrap();
-            self.map[self.ui.prev_square.i][self.ui.prev_square.j].color =
-                self.color_pallete[BROWN];
-            self.map[self.ui.prev_square.i][self.ui.prev_square.j].rect_mesh =
-                graphics::Mesh::new_rectangle(
-                    _ctx,
-                    graphics::DrawMode::fill(),
-                    self.ui.prev_square.rect_obj,
-                    self.ui.curr_player.color,
-                )
-                .unwrap();
-            //self.field_click = false;
         }
 
         if self.populate {
             let i = self.ui.curr_square.i;
             let j = self.ui.curr_square.j;
-            if self.field_click && player_owned(self.ui.curr_player.owned_tiles.clone(), Position::new(i, j)) {
+            if self.field_click
+                && player_owned(self.ui.curr_player.owned_tiles.clone(), Position::new(i, j))
+            {
                 if self.map[i][j].population < 50 {
                     let increase = self.map[i][j].population / 2;
                     if (self.map[i][j].population + increase) >= 50 {
@@ -717,6 +719,9 @@ impl EventHandler for MyGame {
         if ggez::input::mouse::button_pressed(_ctx, _button) && _button == MouseButton::Left {
             let cur_square = mouse_clicked_on_field(self.map.clone(), _x, _y);
             if cur_square.is_some() {
+                if self.ui.curr_square.color != self.color_pallete[YELLOW] {
+                    self.ui.prev_color = self.ui.curr_square.color.clone();
+                }
                 self.ui.prev_square = self.ui.curr_square.clone();
                 self.ui.curr_square = cur_square.unwrap();
                 self.field_click = true;
@@ -724,7 +729,7 @@ impl EventHandler for MyGame {
 
             let action = mouse_clicked_on_action(self.ui.actions.clone(), _x, _y);
             if action.is_some() {
-                if action.unwrap().text.contains("Populate"){
+                if action.unwrap().text.contains("Populate") {
                     self.populate = true;
                 }
             }
