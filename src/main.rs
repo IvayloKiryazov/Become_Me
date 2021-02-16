@@ -360,6 +360,8 @@ struct MyGame {
     pub color_pallete: Vec<Color>,
     pub field_click: bool,
     pub populate: bool,
+    pub moving: bool,
+    pub second_click: bool,
 }
 
 impl MyGame {
@@ -440,6 +442,8 @@ impl MyGame {
             color_pallete: color_pallete,
             field_click: false,
             populate: false,
+            moving: false,
+            second_click: false,
         }
     }
 }
@@ -491,10 +495,35 @@ pub fn player_owned(map: Vec<Position>, position: Position) -> bool {
     return false;
 }
 
+pub fn is_adjacent(to: Endpoint, from: Endpoint) -> bool {
+    let mut is_adjacent = false;
+    let mut eight_directions: Vec<Endpoint> = Vec::new();
+
+    eight_directions.push(Endpoint::new(-1, -1));
+    eight_directions.push(Endpoint::new(0, 1));
+    eight_directions.push(Endpoint::new(1, -1));
+    eight_directions.push(Endpoint::new(1, 0));
+    eight_directions.push(Endpoint::new(1, 1));
+    eight_directions.push(Endpoint::new(0, -1));
+    eight_directions.push(Endpoint::new(-1, 1));
+    eight_directions.push(Endpoint::new(-1, 0));
+
+    for i in eight_directions {
+        let new_row = from.x + i.x;
+        let new_column = from.y + i.y;
+        if new_row == to.x && new_column == to.y {
+            is_adjacent = true;
+            break;
+        }
+    }
+    is_adjacent
+}
+
 impl EventHandler for MyGame {
     //TODO: make keyboard shortcuts
     //ТODO make stuff un-usable after they've been used
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+        //HighLight the tile
         if self.field_click {
             self.map[self.ui.prev_square.i][self.ui.prev_square.j].color = self.ui.prev_color;
             self.map[self.ui.prev_square.i][self.ui.prev_square.j].rect_mesh =
@@ -540,10 +569,43 @@ impl EventHandler for MyGame {
                         }
                     }
                 }
+                self.map[i][j].color = self.ui.curr_player.color;
+                self.map[i][j].rect_mesh = graphics::Mesh::new_rectangle(
+                    _ctx,
+                    graphics::DrawMode::fill(),
+                    self.ui.curr_square.rect_obj,
+                    self.ui.curr_player.color,
+                )
+                .unwrap();
             }
             self.populate = false;
             self.field_click = false;
+        } else if self.moving && self.second_click {
+            let toi = self.ui.curr_square.i;
+            let toj = self.ui.curr_square.j;
+            let fromi = self.ui.prev_square.i;
+            let fromj = self.ui.prev_square.j;
+            if player_owned(
+                self.ui.curr_player.owned_tiles.clone(),
+                Position::new(fromi, fromj),
+            ) && is_adjacent(
+                Endpoint::new(toi as i32, toj as i32),
+                Endpoint::new(fromi as i32, fromj as i32),
+            ) {
+                self.map[toi][toj].color = self.ui.curr_player.color;
+                self.map[toi][toj].rect_mesh = graphics::Mesh::new_rectangle(
+                    _ctx,
+                    graphics::DrawMode::fill(),
+                    self.ui.curr_square.rect_obj,
+                    self.ui.curr_player.color,
+                )
+                .unwrap();
+            }
+            self.moving = false;
+            self.field_click = false;
+            self.second_click = false;
         }
+
         Ok(())
     }
 
@@ -719,6 +781,9 @@ impl EventHandler for MyGame {
         if ggez::input::mouse::button_pressed(_ctx, _button) && _button == MouseButton::Left {
             let cur_square = mouse_clicked_on_field(self.map.clone(), _x, _y);
             if cur_square.is_some() {
+                if self.moving {
+                    self.second_click = true;
+                }
                 if self.ui.curr_square.color != self.color_pallete[YELLOW] {
                     self.ui.prev_color = self.ui.curr_square.color.clone();
                 }
@@ -729,8 +794,11 @@ impl EventHandler for MyGame {
 
             let action = mouse_clicked_on_action(self.ui.actions.clone(), _x, _y);
             if action.is_some() {
-                if action.unwrap().text.contains("Populate") {
+                if action.as_ref().unwrap().text.contains("Populate") {
                     self.populate = true;
+                }
+                if action.as_ref().unwrap().text.contains("Move") {
+                    self.moving = true;
                 }
             }
         }
