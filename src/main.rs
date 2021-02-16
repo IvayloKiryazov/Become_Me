@@ -519,9 +519,13 @@ pub fn is_adjacent(to: Endpoint, from: Endpoint) -> bool {
     is_adjacent
 }
 
+
+
+
 impl EventHandler for MyGame {
     //TODO: make keyboard shortcuts
     //ТODO make stuff un-usable after they've been used
+    //TODO at the ends we have to clone the curr player to the correct place
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         //HighLight the tile
         if self.field_click {
@@ -562,7 +566,9 @@ impl EventHandler for MyGame {
                         self.map[i][j].population += increase;
                         self.ui.curr_player.population += increase;
                     }
+
                     self.ui.curr_square.population = self.map[i][j].population;
+                    //make sure we change the actual player
                     for (pos, _e) in self.players.clone().iter().enumerate() {
                         if self.players[pos].name == self.ui.curr_player.name {
                             self.players[pos].population = self.ui.curr_player.population;
@@ -591,7 +597,58 @@ impl EventHandler for MyGame {
             ) && is_adjacent(
                 Endpoint::new(toi as i32, toj as i32),
                 Endpoint::new(fromi as i32, fromj as i32),
-            ) {
+            ) && self.map[fromi][fromj].population > 0 {
+
+                //TODO calculate population of player
+                if self.map[fromi][fromj].owner == self.map[toi][toj].owner { // no battle
+                    self.map[toi][toj].population += self.map[fromi][fromj].population;
+
+                    self.map[fromi][fromj].population = 0;
+                    /*
+                    PaintARectFromBoard(surface, renderer,
+                        from, player.Color);
+                    PaintARectFromBoard(surface, renderer,
+                        to, player.Color);*/
+                } else {//we win the battle
+                    if self.map[fromi][fromj].population >= self.map[toi][toj].population {
+                        self.map[toi][toj].population = self.map[fromi][fromj].population - self.map[toi][toj].population;
+
+                        self.map[fromi][fromj].population = 0;
+                        self.map[toi][toj].owner = self.map[fromi][fromj].owner.clone();
+
+                        //TODO test if this is correctly working.
+                        if !self.map[toi][toj].owner.contains("Ol") {
+                            for (pos, _e) in self.players.clone().iter().enumerate() {
+                                if self.players[pos].name == self.map[toi][toj].owner {
+                                    for (p, _el) in self.players[pos].owned_tiles.clone().iter().enumerate() {
+                                        if self.players[pos].owned_tiles[p].x == toi && self.players[pos].owned_tiles[p].y == toj {
+                                            self.players[pos].owned_tiles.remove(p);
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                        self.ui.curr_player.owned_tiles.push(Position::new(toi, toj));
+                        /*
+                        PaintARectFromBoard(surface, renderer,
+                            from, player.Color)
+                        PaintARectFromBoard(surface, renderer,
+                            to, player.Color)*/
+                    } else { // we lose the battle
+                        self.map[toi][toj].population -= self.map[fromi][fromj].population;
+                         //TODO do we want it like that?
+                        self.map[fromi][fromj].population = 0;
+                        /*
+                        PaintARectFromBoard(surface, renderer,
+                            from, player.Color)
+                        PaintARectFromBoard(surface, renderer,
+                            to, opponent.Color)*/
+                    }
+                }
+
+
+
                 self.map[toi][toj].color = self.ui.curr_player.color;
                 self.map[toi][toj].rect_mesh = graphics::Mesh::new_rectangle(
                     _ctx,
