@@ -56,7 +56,6 @@ impl Square {
     }
 }
 
-
 #[derive(Clone)]
 pub struct Rectangle {
     pub rect_obj: Rect,

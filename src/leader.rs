@@ -6,7 +6,6 @@ use rand::Rng;
 
 use map::*;
 
-
 #[derive(Clone)]
 pub struct Leader {
     pub name: String,

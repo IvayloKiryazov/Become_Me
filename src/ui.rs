@@ -1,13 +1,11 @@
 extern crate ggez;
 extern crate rand;
 
+use ggez::graphics::Color;
+use ggez::Context;
 
-
-use ggez::graphics::{Color};
-use ggez::{ Context, };
-
-use map::*;
 use leader::*;
+use map::*;
 
 //TODO get these their own place
 pub const YELLOW: usize = 7;
@@ -18,7 +16,6 @@ pub const RED: usize = 3;
 pub const BROWN: usize = 2;
 pub const PURPLE: usize = 1;
 pub const CYAN: usize = 0;
-
 
 pub struct UI {
     pub curr_player: Leader,

@@ -1,17 +1,16 @@
 extern crate ggez;
 extern crate rand;
 
-pub mod map;
-pub mod leader;
-pub mod ui;
 pub mod actions;
+pub mod leader;
+pub mod map;
+pub mod ui;
 
 use ggez::conf::WindowSetup;
 use ggez::event::{self, EventHandler};
 use ggez::graphics::{Color, DrawParam};
 use ggez::input::mouse::MouseButton;
 use ggez::{graphics, Context, GameResult};
-
 
 fn main() {
     let (ctx, event_loop) = &mut ggez::ContextBuilder::new("Become me", "Ivaylo Kiryazov")
@@ -67,7 +66,8 @@ impl MyGame {
             _place_x = 560.0;
             let mut row = map::Row::new();
             for j in 0..17 {
-                let rect = map::Square::new(_ctx, _place_x, _place_y, color_pallete[ui::GRAY], i, j);
+                let rect =
+                    map::Square::new(_ctx, _place_x, _place_y, color_pallete[ui::GRAY], i, j);
                 row.push(rect);
                 _place_x += 45.0;
             }
@@ -121,7 +121,6 @@ impl MyGame {
     }
 }
 
-
 impl EventHandler for MyGame {
     //TODO: make keyboard shortcuts
     //ТODO make stuff un-usable after they've been used
@@ -154,7 +153,10 @@ impl EventHandler for MyGame {
             let i = self.ui.curr_square.i;
             let j = self.ui.curr_square.j;
             if self.field_click
-                && actions::player_owned(self.ui.curr_player.owned_tiles.clone(), leader::Position::new(i, j))
+                && actions::player_owned(
+                    self.ui.curr_player.owned_tiles.clone(),
+                    leader::Position::new(i, j),
+                )
             {
                 if self.map[i][j].population < 50 {
                     let increase = self.map[i][j].population / 2;
@@ -175,6 +177,7 @@ impl EventHandler for MyGame {
                         }
                     }
                 }
+
                 self.map[i][j].color = self.ui.curr_player.color;
                 self.map[i][j].rect_mesh = graphics::Mesh::new_rectangle(
                     _ctx,
@@ -191,64 +194,92 @@ impl EventHandler for MyGame {
             let toj = self.ui.curr_square.j;
             let fromi = self.ui.prev_square.i;
             let fromj = self.ui.prev_square.j;
+
             if actions::player_owned(
                 self.ui.curr_player.owned_tiles.clone(),
                 leader::Position::new(fromi, fromj),
             ) && actions::is_adjacent(
                 leader::Endpoint::new(toi as i32, toj as i32),
                 leader::Endpoint::new(fromi as i32, fromj as i32),
-            ) && self.map[fromi][fromj].population > 0 {
-
+            ) && self.map[fromi][fromj].population > 0
+            {
                 //TODO calculate population of player
-                if self.map[fromi][fromj].owner == self.map[toi][toj].owner { // no battle
+                if self.map[fromi][fromj].owner == self.map[toi][toj].owner {
+                    // no battle
                     self.map[toi][toj].population += self.map[fromi][fromj].population;
-
                     self.map[fromi][fromj].population = 0;
-                    /*
-                    PaintARectFromBoard(surface, renderer,
-                        from, player.Color);
-                    PaintARectFromBoard(surface, renderer,
-                        to, player.Color);*/
-                } else {//we win the battle
+                } else {
+                    //we win the battle
                     if self.map[fromi][fromj].population >= self.map[toi][toj].population {
-                        self.map[toi][toj].population = self.map[fromi][fromj].population - self.map[toi][toj].population;
+                        let result = self.map[fromi][fromi].population - self.map[toi][toj].population;
+                        let loss = self.map[toi][toj].population;
+                        self.map[toi][toj].population = result;
+                        self.ui.curr_player.population -= loss;
 
                         self.map[fromi][fromj].population = 0;
                         self.map[toi][toj].owner = self.map[fromi][fromj].owner.clone();
+
+                        //make sure we change the actual player
+                        for (pos, _e) in self.players.clone().iter().enumerate() {
+                            if self.players[pos].name == self.ui.curr_player.name {
+                                self.players[pos].population = self.ui.curr_player.population;
+                            }
+                        }
 
                         //TODO test if this is correctly working.
                         if !self.map[toi][toj].owner.contains("Ol") {
                             for (pos, _e) in self.players.clone().iter().enumerate() {
                                 if self.players[pos].name == self.map[toi][toj].owner {
-                                    for (p, _el) in self.players[pos].owned_tiles.clone().iter().enumerate() {
-                                        if self.players[pos].owned_tiles[p].x == toi && self.players[pos].owned_tiles[p].y == toj {
+                                    for (p, _el) in
+                                        self.players[pos].owned_tiles.clone().iter().enumerate()
+                                    {
+                                        if self.players[pos].owned_tiles[p].x == toi
+                                            && self.players[pos].owned_tiles[p].y == toj
+                                        {
                                             self.players[pos].owned_tiles.remove(p);
                                         }
                                     }
                                 }
                             }
-
                         }
-                        self.ui.curr_player.owned_tiles.push(leader::Position::new(toi, toj));
-                        /*
-                        PaintARectFromBoard(surface, renderer,
-                            from, player.Color)
-                        PaintARectFromBoard(surface, renderer,
-                            to, player.Color)*/
-                    } else { // we lose the battle
+
+                        self.ui
+                            .curr_player
+                            .owned_tiles
+                            .push(leader::Position::new(toi, toj));
+                    } else {
+                        // we lose the battle
                         self.map[toi][toj].population -= self.map[fromi][fromj].population;
-                         //TODO do we want it like that?
+                        self.ui.curr_player.population -= self.map[fromi][fromj].population;
                         self.map[fromi][fromj].population = 0;
-                        /*
-                        PaintARectFromBoard(surface, renderer,
-                            from, player.Color)
-                        PaintARectFromBoard(surface, renderer,
-                            to, opponent.Color)*/
+
+                        //make sure we change the actual player
+                        for (pos, _e) in self.players.clone().iter().enumerate() {
+                            if self.players[pos].name == self.ui.curr_player.name {
+                                self.players[pos].population = self.ui.curr_player.population;
+                            }
+                        }
+
+                        //TODO test if this is correctly working.
+                        if !self.map[toi][toj].owner.contains("Ol") {
+                            for (pos, _e) in self.players.clone().iter().enumerate() {
+                                if self.players[pos].name == self.map[toi][toj].owner {
+                                    for (p, _el) in
+                                        self.players[pos].owned_tiles.clone().iter().enumerate()
+                                    {
+                                        if self.players[pos].owned_tiles[p].x == toi
+                                            && self.players[pos].owned_tiles[p].y == toj
+                                        {
+                                            self.players[pos].owned_tiles.remove(p);
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
-
-
+                self.ui.curr_square = self.map[toi][toj].clone();
                 self.map[toi][toj].color = self.ui.curr_player.color;
                 self.map[toi][toj].rect_mesh = graphics::Mesh::new_rectangle(
                     _ctx,
