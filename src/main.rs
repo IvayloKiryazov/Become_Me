@@ -1,13 +1,15 @@
 extern crate ggez;
 extern crate rand;
 
+pub mod map;
+pub mod leader;
+
 use ggez::conf::WindowSetup;
 use ggez::event::{self, EventHandler};
-use ggez::graphics::Rect;
 use ggez::graphics::{Color, DrawParam};
 use ggez::input::mouse::MouseButton;
 use ggez::{graphics, Context, GameResult};
-use rand::Rng;
+
 
 //TODO get these their own place
 pub const YELLOW: usize = 7;
@@ -19,212 +21,25 @@ pub const BROWN: usize = 2;
 pub const PURPLE: usize = 1;
 pub const CYAN: usize = 0;
 
-//Square is the smallest structural point of the game.
-//It's the tiles that make up the battlefield.
-#[derive(Clone)]
-pub struct Square {
-    pub owner: String,
-    pub population: u32,
-    pub rect_obj: Rect,
-    pub rect_mesh: graphics::Mesh,
-    pub color: ggez::graphics::Color,
-    pub searched: bool,
-    pub can_create_on: bool,
-    pub i: usize,
-    pub j: usize,
-    pub usable: bool,
-}
-
-type Row = Vec<Square>;
-
-impl Square {
-    pub fn new(
-        ctx: &mut Context,
-        _place_x: f32,
-        _place_y: f32,
-        color: ggez::graphics::Color,
-        i: usize,
-        j: usize,
-    ) -> Self {
-        let rect = graphics::Rect::new(_place_x, _place_y, 40.0, 40.0);
-        //error handle
-        let r = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color);
-        let res = Square {
-            owner: "Ol'uns".to_string(),
-            population: 10,
-            rect_obj: rect,
-            rect_mesh: r.unwrap(),
-            color: color,
-            searched: false,
-            can_create_on: true,
-            i: i,
-            j: j,
-            usable: true,
-        };
-        res
-    }
-
-    pub fn change_color(&mut self, ctx: &mut Context, color: ggez::graphics::Color) {
-        self.color = color;
-        self.rect_mesh =
-            graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), self.rect_obj, color)
-                .unwrap();
-    }
-}
-
-#[derive(Clone)]
-pub struct Leader {
-    pub name: String,
-    pub influence: u32,
-    pub science: u32,
-    pub fertility: u32,
-    pub diplomacy: u32,
-    pub mastery: u32,
-    pub population: u32,
-    pub search_counter: u32,
-    pub color: ggez::graphics::Color,
-    pub owned_tiles: Vec<Position>,
-    //pub Inventory:       []TempItem,
-    pub inventory_size: u32,
-    pub artefact_counter: u32,
-}
-
-impl Leader {
-    pub fn new(name: String, color: ggez::graphics::Color) -> Self {
-        let mut rng = rand::thread_rng();
-        let res = Leader {
-            name: name,
-            influence: rng.gen_range(0..2),
-            science: rng.gen_range(0..2),
-            fertility: rng.gen_range(0..2),
-            diplomacy: rng.gen_range(0..2),
-            mastery: rng.gen_range(0..2),
-            population: 0,
-            search_counter: 0,
-            color: color,
-            owned_tiles: vec![],
-            //pub Inventory:       []TempItem,
-            inventory_size: 0,
-            artefact_counter: 0,
-        };
-        res
-    }
-
-    pub fn starting_village(
-        &mut self,
-        ctx: &mut Context,
-        x: usize,
-        y: usize,
-        map: &mut Vec<Row>,
-        direction: usize,
-    ) -> () {
-        let mut direction_vector: Vec<Endpoint> = Vec::new();
-
-        direction_vector.push(Endpoint::new(1, 1)); //left up corner
-        direction_vector.push(Endpoint::new(-1, 1)); //right up corner
-        direction_vector.push(Endpoint::new(1, -1)); //left down corner
-        direction_vector.push(Endpoint::new(-1, -1)); //right down corner
-
-        let mut column = y;
-        let mut _row = x;
-        for _i in 0..5 {
-            _row = x;
-            for _j in 0..5 {
-                map[column][_row].owner = self.name.clone();
-                self.population += map[column][_row].population;
-                self.owned_tiles
-                    .push(Position::new(map[column][_row].i, map[column][_row].j));
-                map[column][_row].change_color(ctx, self.color);
-
-                if direction_vector[direction].x == -1 {
-                    _row -= 1;
-                } else {
-                    _row += 1;
-                }
-            }
-            if direction_vector[direction].y == -1 {
-                column -= 1;
-            } else {
-                column += 1;
-            }
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct Endpoint {
-    pub x: i32,
-    pub y: i32,
-}
-
-impl Endpoint {
-    pub fn new(x: i32, y: i32) -> Self {
-        let res = Endpoint { x: x, y: y };
-        res
-    }
-}
-
-#[derive(Clone, PartialEq)]
-pub struct Position {
-    pub x: usize,
-    pub y: usize,
-}
-
-impl Position {
-    pub fn new(x: usize, y: usize) -> Self {
-        let res = Position { x: x, y: y };
-        res
-    }
-}
-
-#[derive(Clone)]
-pub struct Rectangle {
-    pub rect_obj: Rect,
-    pub rect_mesh: graphics::Mesh,
-    pub text: String,
-}
-
-impl Rectangle {
-    pub fn new(
-        ctx: &mut Context,
-        _place_x: f32,
-        _place_y: f32,
-        size_x: f32,
-        size_y: f32,
-        text: String,
-        color: ggez::graphics::Color,
-    ) -> Self {
-        let rect_obj = graphics::Rect::new(_place_x, _place_y, size_x, size_y);
-        //error handle
-        let rect_mesh =
-            graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect_obj, color);
-        let res = Rectangle {
-            rect_obj: rect_obj,
-            rect_mesh: rect_mesh.unwrap(),
-            text: text,
-        };
-        res
-    }
-}
 
 pub struct UI {
-    pub curr_player: Leader,
-    pub actions: Vec<Rectangle>,
-    pub curr_square: Square,
-    pub prev_square: Square,
+    pub curr_player: leader::Leader,
+    pub actions: Vec<map::Rectangle>,
+    pub curr_square: map::Square,
+    pub prev_square: map::Square,
     pub prev_color: Color,
 }
 
 impl UI {
     pub fn new(
         ctx: &mut Context,
-        curr_player: Leader,
-        curr_square: Square,
-        prev_square: Square,
+        curr_player: leader::Leader,
+        curr_square: map::Square,
+        prev_square: map::Square,
         color_pallete: Vec<Color>,
     ) -> Self {
         let mut actions = Vec::new();
-        let rect = Rectangle::new(
+        let rect = map::Rectangle::new(
             ctx,
             0.0,
             400.0,
@@ -234,7 +49,7 @@ impl UI {
             color_pallete[CYAN],
         );
         actions.push(rect);
-        let rect = Rectangle::new(
+        let rect = map::Rectangle::new(
             ctx,
             205.0,
             400.0,
@@ -244,7 +59,7 @@ impl UI {
             color_pallete[CYAN],
         );
         actions.push(rect);
-        let rect = Rectangle::new(
+        let rect = map::Rectangle::new(
             ctx,
             0.0,
             505.0,
@@ -254,7 +69,7 @@ impl UI {
             color_pallete[CYAN],
         );
         actions.push(rect);
-        let rect = Rectangle::new(
+        let rect = map::Rectangle::new(
             ctx,
             205.0,
             505.0,
@@ -264,7 +79,7 @@ impl UI {
             color_pallete[CYAN],
         );
         actions.push(rect);
-        let rect = Rectangle::new(
+        let rect = map::Rectangle::new(
             ctx,
             0.0,
             610.0,
@@ -274,7 +89,7 @@ impl UI {
             color_pallete[CYAN],
         );
         actions.push(rect);
-        let rect = Rectangle::new(
+        let rect = map::Rectangle::new(
             ctx,
             205.0,
             610.0,
@@ -285,7 +100,7 @@ impl UI {
         );
         actions.push(rect);
 
-        let rect = Rectangle::new(
+        let rect = map::Rectangle::new(
             ctx,
             410.0,
             400.0,
@@ -296,7 +111,7 @@ impl UI {
         );
         actions.push(rect);
 
-        let rect = Rectangle::new(
+        let rect = map::Rectangle::new(
             ctx,
             410.0,
             610.0,
@@ -307,7 +122,7 @@ impl UI {
         );
         actions.push(rect);
 
-        let rect = Rectangle::new(
+        let rect = map::Rectangle::new(
             ctx,
             0.0,
             0.0,
@@ -318,7 +133,7 @@ impl UI {
         );
         actions.push(rect);
 
-        let rect = Rectangle::new(
+        let rect = map::Rectangle::new(
             ctx,
             0.0,
             200.0,
@@ -354,8 +169,8 @@ fn main() {
 }
 
 struct MyGame {
-    pub map: Vec<Row>,
-    pub players: Vec<Leader>,
+    pub map: Vec<map::Row>,
+    pub players: Vec<leader::Leader>,
     pub ui: UI,
     pub color_pallete: Vec<Color>,
     pub field_click: bool,
@@ -388,13 +203,13 @@ impl MyGame {
 
         let mut _place_x = 560.0;
         let mut _place_y = 0.0;
-        let mut map: Vec<Row> = Vec::new();
+        let mut map: Vec<map::Row> = Vec::new();
 
         for i in 0..17 {
             _place_x = 560.0;
-            let mut row = Row::new();
+            let mut row = map::Row::new();
             for j in 0..17 {
-                let rect = Square::new(_ctx, _place_x, _place_y, color_pallete[GRAY], i, j);
+                let rect = map::Square::new(_ctx, _place_x, _place_y, color_pallete[GRAY], i, j);
                 row.push(rect);
                 _place_x += 45.0;
             }
@@ -403,14 +218,14 @@ impl MyGame {
             _place_y += 45.0;
         }
 
-        let mut corners: Vec<Endpoint> = Vec::new();
+        let mut corners: Vec<leader::Endpoint> = Vec::new();
 
-        corners.push(Endpoint::new(0, 0));
-        corners.push(Endpoint::new(15, 0));
-        corners.push(Endpoint::new(0, 15));
-        corners.push(Endpoint::new(15, 15));
+        corners.push(leader::Endpoint::new(0, 0));
+        corners.push(leader::Endpoint::new(15, 0));
+        corners.push(leader::Endpoint::new(0, 15));
+        corners.push(leader::Endpoint::new(15, 15));
 
-        let mut players: Vec<Leader> = Vec::new();
+        let mut players: Vec<leader::Leader> = Vec::new();
         let mut player_colors: Vec<Color> = Vec::new();
 
         player_colors.push(color_pallete[BLUE]);
@@ -419,7 +234,7 @@ impl MyGame {
         player_colors.push(color_pallete[RED]);
 
         for i in 0..4 {
-            let player = Leader::new(format!("Player{}", i), player_colors[i]);
+            let player = leader::Leader::new(format!("Player{}", i), player_colors[i]);
             players.push(player);
         }
 
@@ -448,7 +263,7 @@ impl MyGame {
     }
 }
 
-pub fn mouse_clicked_on_action(actions: Vec<Rectangle>, x: f32, y: f32) -> Option<Rectangle> {
+pub fn mouse_clicked_on_action(actions: Vec<map::Rectangle>, x: f32, y: f32) -> Option<map::Rectangle> {
     for i in 0..5 {
         if x >= actions[i].rect_obj.x
             && x <= actions[i].rect_obj.x + 200.0
@@ -462,7 +277,7 @@ pub fn mouse_clicked_on_action(actions: Vec<Rectangle>, x: f32, y: f32) -> Optio
     return None;
 }
 
-pub fn mouse_clicked_on_field(map: Vec<Row>, x: f32, y: f32) -> Option<Square> {
+pub fn mouse_clicked_on_field(map: Vec<map::Row>, x: f32, y: f32) -> Option<map::Square> {
     // TODO make size of map+ 1
     let mut column = 20;
     let mut row = 20;
@@ -485,7 +300,7 @@ pub fn mouse_clicked_on_field(map: Vec<Row>, x: f32, y: f32) -> Option<Square> {
     Some(map[row][column].clone())
 }
 
-pub fn player_owned(map: Vec<Position>, position: Position) -> bool {
+pub fn player_owned(map: Vec<leader::Position>, position: leader::Position) -> bool {
     for e in map.iter() {
         if e == &position {
             return true;
@@ -495,18 +310,18 @@ pub fn player_owned(map: Vec<Position>, position: Position) -> bool {
     return false;
 }
 
-pub fn is_adjacent(to: Endpoint, from: Endpoint) -> bool {
+pub fn is_adjacent(to: leader::Endpoint, from: leader::Endpoint) -> bool {
     let mut is_adjacent = false;
-    let mut eight_directions: Vec<Endpoint> = Vec::new();
+    let mut eight_directions: Vec<leader::Endpoint> = Vec::new();
 
-    eight_directions.push(Endpoint::new(-1, -1));
-    eight_directions.push(Endpoint::new(0, 1));
-    eight_directions.push(Endpoint::new(1, -1));
-    eight_directions.push(Endpoint::new(1, 0));
-    eight_directions.push(Endpoint::new(1, 1));
-    eight_directions.push(Endpoint::new(0, -1));
-    eight_directions.push(Endpoint::new(-1, 1));
-    eight_directions.push(Endpoint::new(-1, 0));
+    eight_directions.push(leader::Endpoint::new(-1, -1));
+    eight_directions.push(leader::Endpoint::new(0, 1));
+    eight_directions.push(leader::Endpoint::new(1, -1));
+    eight_directions.push(leader::Endpoint::new(1, 0));
+    eight_directions.push(leader::Endpoint::new(1, 1));
+    eight_directions.push(leader::Endpoint::new(0, -1));
+    eight_directions.push(leader::Endpoint::new(-1, 1));
+    eight_directions.push(leader::Endpoint::new(-1, 0));
 
     for i in eight_directions {
         let new_row = from.x + i.x;
@@ -518,8 +333,6 @@ pub fn is_adjacent(to: Endpoint, from: Endpoint) -> bool {
     }
     is_adjacent
 }
-
-
 
 
 impl EventHandler for MyGame {
@@ -554,7 +367,7 @@ impl EventHandler for MyGame {
             let i = self.ui.curr_square.i;
             let j = self.ui.curr_square.j;
             if self.field_click
-                && player_owned(self.ui.curr_player.owned_tiles.clone(), Position::new(i, j))
+                && player_owned(self.ui.curr_player.owned_tiles.clone(), leader::Position::new(i, j))
             {
                 if self.map[i][j].population < 50 {
                     let increase = self.map[i][j].population / 2;
@@ -593,10 +406,10 @@ impl EventHandler for MyGame {
             let fromj = self.ui.prev_square.j;
             if player_owned(
                 self.ui.curr_player.owned_tiles.clone(),
-                Position::new(fromi, fromj),
+                leader::Position::new(fromi, fromj),
             ) && is_adjacent(
-                Endpoint::new(toi as i32, toj as i32),
-                Endpoint::new(fromi as i32, fromj as i32),
+                leader::Endpoint::new(toi as i32, toj as i32),
+                leader::Endpoint::new(fromi as i32, fromj as i32),
             ) && self.map[fromi][fromj].population > 0 {
 
                 //TODO calculate population of player
@@ -629,7 +442,7 @@ impl EventHandler for MyGame {
                             }
 
                         }
-                        self.ui.curr_player.owned_tiles.push(Position::new(toi, toj));
+                        self.ui.curr_player.owned_tiles.push(leader::Position::new(toi, toj));
                         /*
                         PaintARectFromBoard(surface, renderer,
                             from, player.Color)
