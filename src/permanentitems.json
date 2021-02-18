@@ -1,0 +1,163 @@
+{
+    "items": [
+      {
+        "name" : "Spear Of Asparuh",
+        "influence" : 0,
+        "science" : 0,
+        "fertility" : 0,
+        "diplomacy" : 0,
+        "mastery" : 2
+      },
+      {
+        "name" : "Horse of Asparuh",
+        "influence" : 0,
+        "science" : 0,
+        "fertility" : 2,
+        "diplomacy" : 0,
+        "mastery" : 0
+      },
+      {
+        "name" : "The Sword Kusanagi",
+        "influence" : 1,
+        "science" : 0,
+        "fertility" : 0,
+        "diplomacy" : 0,
+        "mastery" : 2
+      },
+      {
+        "name" : "The Mirror Yata no Kagami",
+        "influence" : 1,
+        "science" : 2,
+        "fertility" : 0,
+        "diplomacy" : 0,
+        "mastery" : 0
+      },
+      {
+        "name" : "The Jewel Yasakani no Magatama",
+        "influence" : 1,
+        "science" : 0,
+        "fertility" : 0,
+        "diplomacy" : 2,
+        "mastery" : 0
+      },
+      {
+        "name" : "Hybrid Soldier Scraps",
+        "influence" : 1,
+        "science" : 0,
+        "fertility" : -1,
+        "diplomacy" : 1,
+        "mastery" : 0
+      },      {
+        "name" : "Horror Box",
+        "influence" : 6,
+        "science" : -2,
+        "fertility" : -2,
+        "diplomacy" : -2,
+        "mastery" : -2
+      },
+      {
+        "name" : "Guitar of the Man in Black",
+        "influence" : 0,
+        "science" : -1,
+        "fertility" : 0,
+        "diplomacy" : 0,
+        "mastery" : 4
+      },
+      {
+        "name" : "Cloning Chamber",
+        "influence" : 0,
+        "science" : 1,
+        "fertility" : 3,
+        "diplomacy" : 0,
+        "mastery" : 0
+      },
+      {
+        "name" : "Become-Me Crown",
+        "influence" : 1,
+        "science" : 1,
+        "fertility" : 1,
+        "diplomacy" : 1,
+        "mastery" : 1
+      },
+      {
+        "name" : "Buddha's Wrath",
+        "influence" : 0,
+        "science" : -1,
+        "fertility" : 0,
+        "diplomacy" : -2,
+        "mastery" : 6
+      },
+      {
+        "name" : "Crescent of the Gods",
+        "influence" : 3,
+        "science" : -2,
+        "fertility" : 0,
+        "diplomacy" : 0,
+        "mastery" : 0
+      },
+      {
+        "name" : "AK-47",
+        "influence" : 5,
+        "science" : 0,
+        "fertility" : 0,
+        "diplomacy" : -5,
+        "mastery" : 0
+      },
+      {
+        "name" : "Roof of the World Pickaxe",
+        "influence" : 0,
+        "science" : 2,
+        "fertility" : -1,
+        "diplomacy" : 0,
+        "mastery" : 1
+      },
+      {
+        "name" : "Ocarina from the Ocean Dungeon",
+        "influence" : 0,
+        "science" : -2,
+        "fertility" : 2,
+        "diplomacy" : 0,
+        "mastery" : 0
+      },
+      {
+        "name" : "Leaf from the Sky Castle",
+        "influence" : 0,
+        "science" : 2,
+        "fertility" : -2,
+        "diplomacy" : 0,
+        "mastery" : 0
+      },
+      {
+        "name" : "Cosmic Reforger",
+        "influence" : 0,
+        "science" : 5,
+        "fertility" : 0,
+        "diplomacy" : -5,
+        "mastery" : 0
+      },
+      {
+        "name" : "Fallen Rocket",
+        "influence" : 0,
+        "science" : -2,
+        "fertility" : 0,
+        "diplomacy" : 0,
+        "mastery" : 2
+      },      
+      {
+        "name" : "Twig of Hope",
+        "influence" : -1,
+        "science" : 0,
+        "fertility" : 3,
+        "diplomacy" : 0,
+        "mastery" : 0
+      },
+      {
+        "name" : "Chrystalised Primodial Essence",
+        "influence" : 0,
+        "science" : 0,
+        "fertility" : 2,
+        "diplomacy" : 0,
+        "mastery" : -1
+      }
+    ]
+  }

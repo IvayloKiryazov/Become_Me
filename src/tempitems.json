@@ -1,0 +1,76 @@
+{
+    "tempitems": [
+      {
+        "tempname" : "Stick",
+        "tmpwarpower" : 1,
+        "tmpinfluence" : 0,
+        "tmpscience" : 0,
+        "tmpfertility" : 0,
+        "tmpdiplomacy" : 0,
+        "tmpmastery" : 0
+      },
+      {
+        "tempname" : "Stone",
+        "tmpwarpower" : 2,
+        "tmpinfluence" : 0,
+        "tmpscience" : 0,
+        "tmpfertility" : 0,
+        "tmpdiplomacy" : 0,
+        "tmpmastery" : 0
+      },
+      {
+        "tempname" : "Broken Bone",
+        "tmpwarpower" : -1,
+        "tmpinfluence" : 0,
+        "tmpscience" : 0,
+        "tmpfertility" : 0,
+        "tmpdiplomacy" : 0,
+        "tmpmastery" : 0
+      },
+      {
+        "tempname" : "Laz0rs",
+        "tmpwarpower" : 3,
+        "tmpinfluence" : 0,
+        "tmpscience" : 1,
+        "tmpfertility" : 0,
+        "tmpdiplomacy" : 0,
+        "tmpmastery" : 0
+      },
+      {
+        "tempname" : "Bio-Enhancers",
+        "tmpwarpower" : 1,
+        "tmpinfluence" : 0,
+        "tmpscience" : 0,
+        "tmpfertility" : 2,
+        "tmpdiplomacy" : 0,
+        "tmpmastery" : 1
+      },
+      {
+        "tempname" : "Mind-Control",
+        "tmpwarpower" : -1,
+        "tmpinfluence" : 1,
+        "tmpscience" : 0,
+        "tmpfertility" : 0,
+        "tmpdiplomacy" : 1,
+        "tmpmastery" : 0
+      }, 
+      {
+        "tempname" : "Propaganda Fliers",
+        "tmpwarpower" : 0,
+        "tmpinfluence" : 1,
+        "tmpscience" : -1,
+        "tmpfertility" : 0,
+        "tmpdiplomacy" : 1,
+        "tmpmastery" : 0
+      },
+      {
+        "tempname" : "Limitless Pill",
+        "tmpwarpower" : 1,
+        "tmpinfluence" : 1,
+        "tmpscience" : 1,
+        "tmpfertility" : 1,
+        "tmpdiplomacy" : 1,
+        "tmpmastery" : 1
+      }
+    ]
+}
