@@ -3,6 +3,8 @@ extern crate rand;
 
 pub mod map;
 pub mod leader;
+pub mod ui;
+pub mod actions;
 
 use ggez::conf::WindowSetup;
 use ggez::event::{self, EventHandler};
@@ -10,150 +12,6 @@ use ggez::graphics::{Color, DrawParam};
 use ggez::input::mouse::MouseButton;
 use ggez::{graphics, Context, GameResult};
 
-
-//TODO get these their own place
-pub const YELLOW: usize = 7;
-pub const BLUE: usize = 6;
-pub const GRAY: usize = 5;
-pub const GREEN: usize = 4;
-pub const RED: usize = 3;
-pub const BROWN: usize = 2;
-pub const PURPLE: usize = 1;
-pub const CYAN: usize = 0;
-
-
-pub struct UI {
-    pub curr_player: leader::Leader,
-    pub actions: Vec<map::Rectangle>,
-    pub curr_square: map::Square,
-    pub prev_square: map::Square,
-    pub prev_color: Color,
-}
-
-impl UI {
-    pub fn new(
-        ctx: &mut Context,
-        curr_player: leader::Leader,
-        curr_square: map::Square,
-        prev_square: map::Square,
-        color_pallete: Vec<Color>,
-    ) -> Self {
-        let mut actions = Vec::new();
-        let rect = map::Rectangle::new(
-            ctx,
-            0.0,
-            400.0,
-            200.0,
-            100.0,
-            "Move".to_string(),
-            color_pallete[CYAN],
-        );
-        actions.push(rect);
-        let rect = map::Rectangle::new(
-            ctx,
-            205.0,
-            400.0,
-            200.0,
-            100.0,
-            "Search".to_string(),
-            color_pallete[CYAN],
-        );
-        actions.push(rect);
-        let rect = map::Rectangle::new(
-            ctx,
-            0.0,
-            505.0,
-            200.0,
-            100.0,
-            "Create".to_string(),
-            color_pallete[CYAN],
-        );
-        actions.push(rect);
-        let rect = map::Rectangle::new(
-            ctx,
-            205.0,
-            505.0,
-            200.0,
-            100.0,
-            "Populate".to_string(),
-            color_pallete[CYAN],
-        );
-        actions.push(rect);
-        let rect = map::Rectangle::new(
-            ctx,
-            0.0,
-            610.0,
-            200.0,
-            100.0,
-            "UseItem".to_string(),
-            color_pallete[CYAN],
-        );
-        actions.push(rect);
-        let rect = map::Rectangle::new(
-            ctx,
-            205.0,
-            610.0,
-            200.0,
-            100.0,
-            "Time Left".to_string(),
-            color_pallete[CYAN],
-        );
-        actions.push(rect);
-
-        let rect = map::Rectangle::new(
-            ctx,
-            410.0,
-            400.0,
-            145.0,
-            205.0,
-            "Tile stats:".to_string(),
-            color_pallete[BROWN],
-        );
-        actions.push(rect);
-
-        let rect = map::Rectangle::new(
-            ctx,
-            410.0,
-            610.0,
-            145.0,
-            100.0,
-            "End Turn".to_string(),
-            color_pallete[PURPLE],
-        );
-        actions.push(rect);
-
-        let rect = map::Rectangle::new(
-            ctx,
-            0.0,
-            0.0,
-            555.0,
-            195.0,
-            "Your stats:".to_string(),
-            color_pallete[BROWN],
-        );
-        actions.push(rect);
-
-        let rect = map::Rectangle::new(
-            ctx,
-            0.0,
-            200.0,
-            555.0,
-            145.0,
-            "Inventory:".to_string(),
-            color_pallete[PURPLE],
-        );
-        actions.push(rect);
-
-        let res = UI {
-            curr_player: curr_player.clone(),
-            actions: actions,
-            curr_square: curr_square,
-            prev_square: prev_square,
-            prev_color: curr_player.color,
-        };
-        res
-    }
-}
 
 fn main() {
     let (ctx, event_loop) = &mut ggez::ContextBuilder::new("Become me", "Ivaylo Kiryazov")
@@ -171,7 +29,7 @@ fn main() {
 struct MyGame {
     pub map: Vec<map::Row>,
     pub players: Vec<leader::Leader>,
-    pub ui: UI,
+    pub ui: ui::UI,
     pub color_pallete: Vec<Color>,
     pub field_click: bool,
     pub populate: bool,
@@ -209,7 +67,7 @@ impl MyGame {
             _place_x = 560.0;
             let mut row = map::Row::new();
             for j in 0..17 {
-                let rect = map::Square::new(_ctx, _place_x, _place_y, color_pallete[GRAY], i, j);
+                let rect = map::Square::new(_ctx, _place_x, _place_y, color_pallete[ui::GRAY], i, j);
                 row.push(rect);
                 _place_x += 45.0;
             }
@@ -228,10 +86,10 @@ impl MyGame {
         let mut players: Vec<leader::Leader> = Vec::new();
         let mut player_colors: Vec<Color> = Vec::new();
 
-        player_colors.push(color_pallete[BLUE]);
-        player_colors.push(color_pallete[GREEN]);
-        player_colors.push(color_pallete[CYAN]);
-        player_colors.push(color_pallete[RED]);
+        player_colors.push(color_pallete[ui::BLUE]);
+        player_colors.push(color_pallete[ui::GREEN]);
+        player_colors.push(color_pallete[ui::CYAN]);
+        player_colors.push(color_pallete[ui::RED]);
 
         for i in 0..4 {
             let player = leader::Leader::new(format!("Player{}", i), player_colors[i]);
@@ -242,7 +100,7 @@ impl MyGame {
             players[pos].starting_village(_ctx, e.x as usize, e.y as usize, &mut map, pos);
         }
 
-        let mut _ui = UI::new(
+        let mut _ui = ui::UI::new(
             _ctx,
             players[0].clone(),
             map[0][0].clone(),
@@ -263,77 +121,6 @@ impl MyGame {
     }
 }
 
-pub fn mouse_clicked_on_action(actions: Vec<map::Rectangle>, x: f32, y: f32) -> Option<map::Rectangle> {
-    for i in 0..5 {
-        if x >= actions[i].rect_obj.x
-            && x <= actions[i].rect_obj.x + 200.0
-            && y >= actions[i].rect_obj.y
-            && y <= actions[i].rect_obj.y + 100.0
-        {
-            return Some(actions[i].clone());
-        }
-    }
-
-    return None;
-}
-
-pub fn mouse_clicked_on_field(map: Vec<map::Row>, x: f32, y: f32) -> Option<map::Square> {
-    // TODO make size of map+ 1
-    let mut column = 20;
-    let mut row = 20;
-    for i in 0..17 {
-        if x >= map[0][i].rect_obj.x && x <= map[0][i].rect_obj.x + 40.0 {
-            column = i;
-            for j in 0..17 {
-                if y >= map[j][column].rect_obj.y && y <= map[j][column].rect_obj.y + 40.0 {
-                    row = j;
-                    break;
-                }
-            }
-            break;
-        }
-    }
-
-    if row == 20 || column == 20 {
-        return None;
-    }
-    Some(map[row][column].clone())
-}
-
-pub fn player_owned(map: Vec<leader::Position>, position: leader::Position) -> bool {
-    for e in map.iter() {
-        if e == &position {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-pub fn is_adjacent(to: leader::Endpoint, from: leader::Endpoint) -> bool {
-    let mut is_adjacent = false;
-    let mut eight_directions: Vec<leader::Endpoint> = Vec::new();
-
-    eight_directions.push(leader::Endpoint::new(-1, -1));
-    eight_directions.push(leader::Endpoint::new(0, 1));
-    eight_directions.push(leader::Endpoint::new(1, -1));
-    eight_directions.push(leader::Endpoint::new(1, 0));
-    eight_directions.push(leader::Endpoint::new(1, 1));
-    eight_directions.push(leader::Endpoint::new(0, -1));
-    eight_directions.push(leader::Endpoint::new(-1, 1));
-    eight_directions.push(leader::Endpoint::new(-1, 0));
-
-    for i in eight_directions {
-        let new_row = from.x + i.x;
-        let new_column = from.y + i.y;
-        if new_row == to.x && new_column == to.y {
-            is_adjacent = true;
-            break;
-        }
-    }
-    is_adjacent
-}
-
 
 impl EventHandler for MyGame {
     //TODO: make keyboard shortcuts
@@ -352,13 +139,13 @@ impl EventHandler for MyGame {
                 )
                 .unwrap();
             self.map[self.ui.curr_square.i][self.ui.curr_square.j].color =
-                self.color_pallete[YELLOW];
+                self.color_pallete[ui::YELLOW];
             self.map[self.ui.curr_square.i][self.ui.curr_square.j].rect_mesh =
                 graphics::Mesh::new_rectangle(
                     _ctx,
                     graphics::DrawMode::fill(),
                     self.ui.curr_square.rect_obj,
-                    self.color_pallete[YELLOW],
+                    self.color_pallete[ui::YELLOW],
                 )
                 .unwrap();
         }
@@ -367,7 +154,7 @@ impl EventHandler for MyGame {
             let i = self.ui.curr_square.i;
             let j = self.ui.curr_square.j;
             if self.field_click
-                && player_owned(self.ui.curr_player.owned_tiles.clone(), leader::Position::new(i, j))
+                && actions::player_owned(self.ui.curr_player.owned_tiles.clone(), leader::Position::new(i, j))
             {
                 if self.map[i][j].population < 50 {
                     let increase = self.map[i][j].population / 2;
@@ -404,10 +191,10 @@ impl EventHandler for MyGame {
             let toj = self.ui.curr_square.j;
             let fromi = self.ui.prev_square.i;
             let fromj = self.ui.prev_square.j;
-            if player_owned(
+            if actions::player_owned(
                 self.ui.curr_player.owned_tiles.clone(),
                 leader::Position::new(fromi, fromj),
-            ) && is_adjacent(
+            ) && actions::is_adjacent(
                 leader::Endpoint::new(toi as i32, toj as i32),
                 leader::Endpoint::new(fromi as i32, fromj as i32),
             ) && self.map[fromi][fromj].population > 0 {
@@ -649,12 +436,12 @@ impl EventHandler for MyGame {
         _y: f32,
     ) {
         if ggez::input::mouse::button_pressed(_ctx, _button) && _button == MouseButton::Left {
-            let cur_square = mouse_clicked_on_field(self.map.clone(), _x, _y);
+            let cur_square = actions::mouse_clicked_on_field(self.map.clone(), _x, _y);
             if cur_square.is_some() {
                 if self.moving {
                     self.second_click = true;
                 }
-                if self.ui.curr_square.color != self.color_pallete[YELLOW] {
+                if self.ui.curr_square.color != self.color_pallete[ui::YELLOW] {
                     self.ui.prev_color = self.ui.curr_square.color.clone();
                 }
                 self.ui.prev_square = self.ui.curr_square.clone();
@@ -662,7 +449,7 @@ impl EventHandler for MyGame {
                 self.field_click = true;
             }
 
-            let action = mouse_clicked_on_action(self.ui.actions.clone(), _x, _y);
+            let action = actions::mouse_clicked_on_action(self.ui.actions.clone(), _x, _y);
             if action.is_some() {
                 if action.as_ref().unwrap().text.contains("Populate") {
                     self.populate = true;
