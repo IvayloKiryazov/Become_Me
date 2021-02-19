@@ -1,76 +1,74 @@
-{
-    "tempitems": [
+[
       {
-        "tempname" : "Stick",
-        "tmpwarpower" : 1,
-        "tmpinfluence" : 0,
-        "tmpscience" : 0,
-        "tmpfertility" : 0,
-        "tmpdiplomacy" : 0,
-        "tmpmastery" : 0
+        "name" : "Stick",
+        "warpower" : 1,
+        "influence" : 0,
+        "science" : 0,
+        "fertility" : 0,
+        "diplomacy" : 0,
+        "mastery" : 0
       },
       {
-        "tempname" : "Stone",
-        "tmpwarpower" : 2,
-        "tmpinfluence" : 0,
-        "tmpscience" : 0,
-        "tmpfertility" : 0,
-        "tmpdiplomacy" : 0,
-        "tmpmastery" : 0
+        "name" : "Stone",
+        "warpower" : 2,
+        "influence" : 0,
+        "science" : 0,
+        "fertility" : 0,
+        "diplomacy" : 0,
+        "mastery" : 0
       },
       {
-        "tempname" : "Broken Bone",
-        "tmpwarpower" : -1,
-        "tmpinfluence" : 0,
-        "tmpscience" : 0,
-        "tmpfertility" : 0,
-        "tmpdiplomacy" : 0,
-        "tmpmastery" : 0
+        "name" : "Broken Bone",
+        "warpower" : -1,
+        "influence" : 0,
+        "science" : 0,
+        "fertility" : 0,
+        "diplomacy" : 0,
+        "mastery" : 0
       },
       {
-        "tempname" : "Laz0rs",
-        "tmpwarpower" : 3,
-        "tmpinfluence" : 0,
-        "tmpscience" : 1,
-        "tmpfertility" : 0,
-        "tmpdiplomacy" : 0,
-        "tmpmastery" : 0
+        "name" : "Laz0rs",
+        "warpower" : 3,
+        "influence" : 0,
+        "science" : 1,
+        "fertility" : 0,
+        "diplomacy" : 0,
+        "mastery" : 0
       },
       {
-        "tempname" : "Bio-Enhancers",
-        "tmpwarpower" : 1,
-        "tmpinfluence" : 0,
-        "tmpscience" : 0,
-        "tmpfertility" : 2,
-        "tmpdiplomacy" : 0,
-        "tmpmastery" : 1
+        "name" : "Bio-Enhancers",
+        "warpower" : 1,
+        "influence" : 0,
+        "science" : 0,
+        "fertility" : 2,
+        "diplomacy" : 0,
+        "mastery" : 1
       },
       {
-        "tempname" : "Mind-Control",
-        "tmpwarpower" : -1,
-        "tmpinfluence" : 1,
-        "tmpscience" : 0,
-        "tmpfertility" : 0,
-        "tmpdiplomacy" : 1,
-        "tmpmastery" : 0
+        "name" : "Mind-Control",
+        "warpower" : -1,
+        "influence" : 1,
+        "science" : 0,
+        "fertility" : 0,
+        "diplomacy" : 1,
+        "mastery" : 0
       }, 
       {
-        "tempname" : "Propaganda Fliers",
-        "tmpwarpower" : 0,
-        "tmpinfluence" : 1,
-        "tmpscience" : -1,
-        "tmpfertility" : 0,
-        "tmpdiplomacy" : 1,
-        "tmpmastery" : 0
+        "name" : "Propaganda Fliers",
+        "warpower" : 0,
+        "influence" : 1,
+        "science" : -1,
+        "fertility" : 0,
+        "diplomacy" : 1,
+        "mastery" : 0
       },
       {
-        "tempname" : "Limitless Pill",
-        "tmpwarpower" : 1,
-        "tmpinfluence" : 1,
-        "tmpscience" : 1,
-        "tmpfertility" : 1,
-        "tmpdiplomacy" : 1,
-        "tmpmastery" : 1
+        "name" : "Limitless Pill",
+        "warpower" : 1,
+        "influence" : 1,
+        "science" : 1,
+        "fertility" : 1,
+        "diplomacy" : 1,
+        "mastery" : 1
       }
     ]
-}

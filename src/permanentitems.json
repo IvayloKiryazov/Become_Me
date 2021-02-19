@@ -1,5 +1,4 @@
-{
-    "items": [
+[
       {
         "name" : "Spear Of Asparuh",
         "influence" : 0,
@@ -160,4 +159,3 @@
         "mastery" : -1
       }
     ]
-  }

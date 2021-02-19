@@ -1,16 +1,23 @@
 extern crate ggez;
 extern crate rand;
+extern crate serde;
+extern crate serde_json;
+
 
 pub mod actions;
 pub mod leader;
 pub mod map;
 pub mod ui;
+pub mod items;
 
 use ggez::conf::WindowSetup;
+use std::env;
 use ggez::event::{self, EventHandler};
 use ggez::graphics::{Color, DrawParam};
 use ggez::input::mouse::MouseButton;
 use ggez::{graphics, Context, GameResult};
+
+
 
 fn main() {
     let (ctx, event_loop) = &mut ggez::ContextBuilder::new("Become me", "Ivaylo Kiryazov")
@@ -107,6 +114,11 @@ impl MyGame {
             map[0][0].clone(),
             color_pallete.clone(),
         );
+
+        let tmp_items = items::read_expandables(format!("{}\\src\\tempitems.json",env::current_dir().unwrap().display()));
+        let perm_items = items::read_relics(format!("{}\\src\\permanentitems.json",env::current_dir().unwrap().display()));
+
+
 
         MyGame {
             map: map,
