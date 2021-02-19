@@ -11,6 +11,7 @@ pub mod ui;
 pub mod items;
 
 use ggez::conf::WindowSetup;
+use ggez::timer;
 use std::env;
 use ggez::event::{self, EventHandler};
 use ggez::graphics::{Color, DrawParam};
@@ -41,6 +42,9 @@ struct MyGame {
     pub populate: bool,
     pub moving: bool,
     pub second_click: bool,
+    pub tmp_items: Vec<items::Expandable>,
+    pub perm_items: Vec<items::Relics>,
+    pub end_time: f64,
 }
 
 impl MyGame {
@@ -115,11 +119,6 @@ impl MyGame {
             color_pallete.clone(),
         );
 
-        let tmp_items = items::read_expandables(format!("{}\\src\\tempitems.json",env::current_dir().unwrap().display()));
-        let perm_items = items::read_relics(format!("{}\\src\\permanentitems.json",env::current_dir().unwrap().display()));
-
-
-
         MyGame {
             map: map,
             players: players,
@@ -129,6 +128,9 @@ impl MyGame {
             populate: false,
             moving: false,
             second_click: false,
+            tmp_items : items::read_expandables(format!("{}\\src\\tempitems.json",env::current_dir().unwrap().display())),
+            perm_items : items::read_relics(format!("{}\\src\\permanentitems.json",env::current_dir().unwrap().display())),
+            end_time : timer::duration_to_f64(timer::time_since_start(_ctx)).trunc() + 30.0,
         }
     }
 }
@@ -468,6 +470,18 @@ impl EventHandler for MyGame {
         //err
         graphics::draw(ctx, &txt, params).unwrap();
 
+
+        let mut txt =
+            graphics::Text::new(format!("{}", self.end_time - timer::duration_to_f64(timer::time_since_start(ctx)).trunc()));
+        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(30.0));
+
+        let coords = [
+            self.ui.actions[5].rect_obj.x + 145.0,
+            self.ui.actions[5].rect_obj.y + 5.0,
+        ];
+
+        let params = graphics::DrawParam::default().dest(coords);
+        graphics::draw(ctx, &txt, params).unwrap();
         graphics::present(ctx)
     }
 

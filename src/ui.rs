@@ -90,7 +90,7 @@ impl UI {
             610.0,
             200.0,
             100.0,
-            "Time Left".to_string(),
+            "Time Left:".to_string(),
             color_pallete[CYAN],
         );
         actions.push(rect);
