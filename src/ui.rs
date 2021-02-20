@@ -80,7 +80,7 @@ impl UI {
             610.0,
             200.0,
             100.0,
-            "UseItem".to_string(),
+            "Use Item".to_string(),
             color_pallete[CYAN],
         );
         actions.push(rect);
@@ -90,7 +90,7 @@ impl UI {
             610.0,
             200.0,
             100.0,
-            "Time Left:".to_string(),
+            "End Turn".to_string(),
             color_pallete[CYAN],
         );
         actions.push(rect);
@@ -112,7 +112,7 @@ impl UI {
             610.0,
             145.0,
             100.0,
-            "End Turn".to_string(),
+            "Time Left:".to_string(),
             color_pallete[PURPLE],
         );
         actions.push(rect);

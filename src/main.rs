@@ -18,7 +18,7 @@ use ggez::{graphics, Context, GameResult};
 use rand::Rng;
 use std::env;
 
-pub const TURN_TIME: f64 = 5.0;
+pub const TURN_TIME: f64 = 30.0;
 
 fn main() {
     let (ctx, event_loop) = &mut ggez::ContextBuilder::new("Become me", "Ivaylo Kiryazov")
@@ -137,6 +137,7 @@ impl MyGame {
             field_click: false,
             second_click: false,
             /*
+            // for debug :)
             tmp_items: items::read_expandables(format!(
                 "{}\\..\\..\\src\\tempitems.json",
                 env::current_dir().unwrap().display()
@@ -196,7 +197,6 @@ impl MyGame {
     }
 
     fn update_player(&mut self) {
-        //TODO test edge cases on this
         for (pos, _e) in self.players.clone().iter().enumerate() {
             if self.players[pos].name == self.ui.curr_player.name {
                 self.players[pos] = self.ui.curr_player.clone();
@@ -206,14 +206,10 @@ impl MyGame {
 }
 
 impl EventHandler for MyGame {
-    //TODO make keyboard shortcuts
-    //ТODO make stuff un-usable after they've been used
-    //TODO at the ends we have to clone the curr player to the correct place
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        // comparing floats is  fun :)
+        // comparing floats is fun :)
         if (self.end_time - timer::duration_to_f64(timer::time_since_start(_ctx)).trunc()) <= 0.0 {
             self.game_state = State::EndTurn;
-            println!("END TURN");
         }
         self.highlight_tile(_ctx);
 
@@ -265,7 +261,6 @@ impl EventHandler for MyGame {
                 leader::Endpoint::new(fromi as i32, fromj as i32),
             ) && self.map[fromi][fromj].population > 0
             {
-                //TODO calculate population of player
                 if self.map[fromi][fromj].owner == self.map[toi][toj].owner {
                     // no battle
                     self.map[toi][toj].population += self.map[fromi][fromj].population;
@@ -284,7 +279,7 @@ impl EventHandler for MyGame {
 
                         self.update_player();
 
-                        //TODO test if this is correctly working.
+                        //TODO test more
                         if !self.map[toi][toj].owner.contains("Ol") {
                             for (pos, _e) in self.players.clone().iter().enumerate() {
                                 if self.players[pos].name == self.map[toi][toj].owner {
@@ -297,6 +292,7 @@ impl EventHandler for MyGame {
                                             self.players[pos].owned_tiles.remove(p);
                                         }
                                     }
+                                    self.players[pos].population -= loss;
                                 }
                             }
                         }
@@ -307,25 +303,17 @@ impl EventHandler for MyGame {
                             .push(leader::Position::new(toi, toj));
                     } else {
                         // we lose the battle
-                        self.map[toi][toj].population -= self.map[fromi][fromj].population;
-                        self.ui.curr_player.population -= self.map[fromi][fromj].population;
+                        let loss = self.map[fromi][fromj].population;
+                        self.map[toi][toj].population -= loss;
+                        self.ui.curr_player.population -= loss;
                         self.map[fromi][fromj].population = 0;
 
                         self.update_player();
 
-                        //TODO test if this is correctly working.
                         if !self.map[toi][toj].owner.contains("Ol") {
                             for (pos, _e) in self.players.clone().iter().enumerate() {
                                 if self.players[pos].name == self.map[toi][toj].owner {
-                                    for (p, _el) in
-                                        self.players[pos].owned_tiles.clone().iter().enumerate()
-                                    {
-                                        if self.players[pos].owned_tiles[p].x == toi
-                                            && self.players[pos].owned_tiles[p].y == toj
-                                        {
-                                            self.players[pos].owned_tiles.remove(p);
-                                        }
-                                    }
+                                    self.players[pos].population -= loss;
                                 }
                             }
                         }
@@ -522,7 +510,7 @@ impl EventHandler for MyGame {
         //Player info
         draw_text(
             ctx,
-            format!("Influence: {}", self.ui.curr_player.influence),
+            format!("Name: {}", self.ui.curr_player.name),
             self.ui.actions[8].rect_obj.x + 5.0,
             self.ui.actions[8].rect_obj.y + 40.0,
             20.0,
@@ -530,7 +518,7 @@ impl EventHandler for MyGame {
 
         draw_text(
             ctx,
-            format!("Science: {}", self.ui.curr_player.science),
+            format!("Population: {}", self.ui.curr_player.population),
             self.ui.actions[8].rect_obj.x + 5.0,
             self.ui.actions[8].rect_obj.y + 65.0,
             20.0,
@@ -538,7 +526,7 @@ impl EventHandler for MyGame {
 
         draw_text(
             ctx,
-            format!("Fertility: {}", self.ui.curr_player.fertility),
+            format!("Science: {}", self.ui.curr_player.science),
             self.ui.actions[8].rect_obj.x + 5.0,
             self.ui.actions[8].rect_obj.y + 90.0,
             20.0,
@@ -546,7 +534,7 @@ impl EventHandler for MyGame {
 
         draw_text(
             ctx,
-            format!("Diplomacy: {}", self.ui.curr_player.diplomacy),
+            format!("Fertility: {}", self.ui.curr_player.fertility),
             self.ui.actions[8].rect_obj.x + 5.0,
             self.ui.actions[8].rect_obj.y + 115.0,
             20.0,
@@ -554,7 +542,7 @@ impl EventHandler for MyGame {
 
         draw_text(
             ctx,
-            format!("Mastery: {}", self.ui.curr_player.mastery),
+            format!("Diplomacy: {}", self.ui.curr_player.diplomacy),
             self.ui.actions[8].rect_obj.x + 5.0,
             self.ui.actions[8].rect_obj.y + 140.0,
             20.0,
@@ -562,11 +550,20 @@ impl EventHandler for MyGame {
 
         draw_text(
             ctx,
-            format!("Population: {}", self.ui.curr_player.population),
+            format!("Mastery: {}", self.ui.curr_player.mastery),
             self.ui.actions[8].rect_obj.x + 5.0,
             self.ui.actions[8].rect_obj.y + 170.0,
             20.0,
         );
+
+        draw_text(
+            ctx,
+            format!("Influence: {}", self.ui.curr_player.influence),
+            self.ui.actions[8].rect_obj.x + 5.0,
+            self.ui.actions[8].rect_obj.y + 195.0,
+            20.0,
+        );
+
 
         //Inventory
         let mut initial_y = 35.0;
@@ -588,9 +585,9 @@ impl EventHandler for MyGame {
                 "{}",
                 self.end_time - timer::duration_to_f64(timer::time_since_start(ctx)).trunc()
             ),
-            self.ui.actions[5].rect_obj.x + 145.0,
-            self.ui.actions[5].rect_obj.y + 5.0,
-            30.0,
+            self.ui.actions[7].rect_obj.x + 5.0,
+            self.ui.actions[7].rect_obj.y + 45.0,
+            50.0,
         );
 
         graphics::present(ctx)
@@ -625,7 +622,7 @@ impl EventHandler for MyGame {
                     "Move" => self.game_state = State::Moving,
                     "Create" => self.game_state = State::Create,
                     "Search" => self.game_state = State::Search,
-                    "UseItem" => self.game_state = State::UseItem,
+                    "Use Item" => self.game_state = State::UseItem,
                     "End Turn" => self.game_state = State::EndTurn,
                     _ => self.game_state = State::Start,
                 }

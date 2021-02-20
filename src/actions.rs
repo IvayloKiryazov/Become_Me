@@ -2,7 +2,7 @@ use leader::*;
 use map::*;
 
 pub fn mouse_clicked_on_action(actions: Vec<Rectangle>, x: f32, y: f32) -> Option<Rectangle> {
-    for i in 0..5 {
+    for i in 0..6 {
         if x >= actions[i].rect_obj.x
             && x <= actions[i].rect_obj.x + 200.0
             && y >= actions[i].rect_obj.y
@@ -10,14 +10,6 @@ pub fn mouse_clicked_on_action(actions: Vec<Rectangle>, x: f32, y: f32) -> Optio
         {
             return Some(actions[i].clone());
         }
-    }
-    // special check for END_TURN
-    if x >= actions[7].rect_obj.x
-        && x <= actions[7].rect_obj.x + 145.0
-        && y >= actions[7].rect_obj.y
-        && y <= actions[7].rect_obj.y + 100.0
-    {
-        return Some(actions[7].clone());
     }
     return None;
 }
