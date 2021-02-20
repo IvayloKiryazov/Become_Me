@@ -11,7 +11,14 @@ pub fn mouse_clicked_on_action(actions: Vec<Rectangle>, x: f32, y: f32) -> Optio
             return Some(actions[i].clone());
         }
     }
-
+    // special check for END_TURN
+    if x >= actions[7].rect_obj.x
+        && x <= actions[7].rect_obj.x + 145.0
+        && y >= actions[7].rect_obj.y
+        && y <= actions[7].rect_obj.y + 100.0
+    {
+        return Some(actions[7].clone());
+    }
     return None;
 }
 

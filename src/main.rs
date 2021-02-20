@@ -18,6 +18,8 @@ use ggez::{graphics, Context, GameResult};
 use rand::Rng;
 use std::env;
 
+pub const TURN_TIME: f64 = 5.0;
+
 fn main() {
     let (ctx, event_loop) = &mut ggez::ContextBuilder::new("Become me", "Ivaylo Kiryazov")
         .window_setup(WindowSetup::default().title("Become me!"))
@@ -134,7 +136,8 @@ impl MyGame {
             color_pallete: color_pallete,
             field_click: false,
             second_click: false,
-            /*tmp_items: items::read_expandables(format!(
+            /*
+            tmp_items: items::read_expandables(format!(
                 "{}\\..\\..\\src\\tempitems.json",
                 env::current_dir().unwrap().display()
             )),
@@ -150,7 +153,7 @@ impl MyGame {
                 "{}\\src\\permanentitems.json",
                 env::current_dir().unwrap().display()
             )),
-            end_time: timer::duration_to_f64(timer::time_since_start(_ctx)).trunc() + 30.0,
+            end_time: timer::duration_to_f64(timer::time_since_start(_ctx)).trunc() + TURN_TIME,
             game_state: State::Start,
         }
     }
@@ -192,7 +195,7 @@ impl MyGame {
         }
     }
 
-    fn update_player(&mut self){
+    fn update_player(&mut self) {
         //TODO test edge cases on this
         for (pos, _e) in self.players.clone().iter().enumerate() {
             if self.players[pos].name == self.ui.curr_player.name {
@@ -207,6 +210,11 @@ impl EventHandler for MyGame {
     //ТODO make stuff un-usable after they've been used
     //TODO at the ends we have to clone the curr player to the correct place
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+        // comparing floats is  fun :)
+        if (self.end_time - timer::duration_to_f64(timer::time_since_start(_ctx)).trunc()) <= 0.0 {
+            self.game_state = State::EndTurn;
+            println!("END TURN");
+        }
         self.highlight_tile(_ctx);
 
         let i = self.ui.curr_square.i;
@@ -431,6 +439,22 @@ impl EventHandler for MyGame {
             self.game_state = State::Start;
         //TODO: at the end we have to reduce the stats.
         } else if self.game_state == State::EndTurn {
+            self.update_player();
+            for (pos, _e) in self.players.clone().iter().enumerate() {
+                if self.players[pos].name == self.ui.curr_player.name {
+                    if pos + 1 == self.players.len() {
+                        self.ui.curr_player = self.players[0].clone();
+                    } else {
+                        self.ui.curr_player = self.players[pos + 1].clone();
+                    }
+                    break;
+                }
+            }
+            self.end_time =
+                timer::duration_to_f64(timer::time_since_start(_ctx)).trunc() + TURN_TIME;
+            self.game_state = State::Start;
+            self.field_click = false;
+            self.second_click = false;
         }
         Ok(())
     }
@@ -554,7 +578,7 @@ impl EventHandler for MyGame {
                 self.ui.actions[9].rect_obj.y + initial_y,
                 20.0,
             );
-             initial_y += 20.0;
+            initial_y += 20.0;
         }
 
         //Timer
