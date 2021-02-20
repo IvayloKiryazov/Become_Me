@@ -1,7 +1,6 @@
-
+use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Read;
-use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Relics {
@@ -26,7 +25,6 @@ pub struct Expandable {
     //pub count: bool,
 }
 
-
 pub fn read_expandables(path: String) -> Vec<Expandable> {
     let mut file = File::open(path).unwrap();
     let mut data = String::new();
@@ -38,7 +36,6 @@ pub fn read_expandables(path: String) -> Vec<Expandable> {
     }
     array
 }
-
 
 pub fn read_relics(path: String) -> Vec<Relics> {
     let mut file = File::open(path).unwrap();

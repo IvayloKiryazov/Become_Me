@@ -3,22 +3,19 @@ extern crate rand;
 extern crate serde;
 extern crate serde_json;
 
-
 pub mod actions;
+pub mod items;
 pub mod leader;
 pub mod map;
 pub mod ui;
-pub mod items;
 
 use ggez::conf::WindowSetup;
-use ggez::timer;
-use std::env;
 use ggez::event::{self, EventHandler};
 use ggez::graphics::{Color, DrawParam};
 use ggez::input::mouse::MouseButton;
+use ggez::timer;
 use ggez::{graphics, Context, GameResult};
-
-
+use std::env;
 
 fn main() {
     let (ctx, event_loop) = &mut ggez::ContextBuilder::new("Become me", "Ivaylo Kiryazov")
@@ -42,6 +39,10 @@ struct MyGame {
     pub populate: bool,
     pub moving: bool,
     pub second_click: bool,
+    pub create: bool,
+    pub search: bool,
+    pub use_item: bool,
+    pub end_turn: bool,
     pub tmp_items: Vec<items::Expandable>,
     pub perm_items: Vec<items::Relics>,
     pub end_time: f64,
@@ -128,11 +129,32 @@ impl MyGame {
             populate: false,
             moving: false,
             second_click: false,
-            tmp_items : items::read_expandables(format!("{}\\src\\tempitems.json",env::current_dir().unwrap().display())),
-            perm_items : items::read_relics(format!("{}\\src\\permanentitems.json",env::current_dir().unwrap().display())),
-            end_time : timer::duration_to_f64(timer::time_since_start(_ctx)).trunc() + 30.0,
+             create: false,
+             search: false,
+             use_item: false,
+             end_turn: false,
+            tmp_items: items::read_expandables(format!(
+                "{}\\src\\tempitems.json",
+                env::current_dir().unwrap().display()
+            )),
+            perm_items: items::read_relics(format!(
+                "{}\\src\\permanentitems.json",
+                env::current_dir().unwrap().display()
+            )),
+            end_time: timer::duration_to_f64(timer::time_since_start(_ctx)).trunc() + 30.0,
         }
     }
+}
+
+pub fn draw_text(ctx: &mut Context, text: String, x: f32, y: f32, size: f32) {
+    let mut txt = graphics::Text::new(text);
+    txt.set_font(graphics::Font::default(), graphics::Scale::uniform(size));
+
+    let coords = [x, y];
+
+    let params = graphics::DrawParam::default().dest(coords);
+    //err
+    graphics::draw(ctx, &txt, params).unwrap();
 }
 
 impl EventHandler for MyGame {
@@ -225,7 +247,8 @@ impl EventHandler for MyGame {
                 } else {
                     //we win the battle
                     if self.map[fromi][fromj].population >= self.map[toi][toj].population {
-                        let result = self.map[fromi][fromi].population - self.map[toi][toj].population;
+                        let result =
+                            self.map[fromi][fromi].population - self.map[toi][toj].population;
                         let loss = self.map[toi][toj].population;
                         self.map[toi][toj].population = result;
                         self.ui.curr_player.population -= loss;
@@ -321,167 +344,109 @@ impl EventHandler for MyGame {
 
         for (pos, _) in self.ui.actions.iter().enumerate() {
             graphics::draw(ctx, &self.ui.actions[pos].rect_mesh, DrawParam::default())?;
-
-            let mut txt = graphics::Text::new(format!("{}", self.ui.actions[pos].text));
-            txt.set_font(graphics::Font::default(), graphics::Scale::uniform(30.0));
-
-            let coords = [
+            draw_text(
+                ctx,
+                format!(
+                    "{}", self.ui.actions[pos].text
+                ),
                 self.ui.actions[pos].rect_obj.x + 5.0,
-                self.ui.actions[pos].rect_obj.y + 5.0,
-            ];
-
-            let params = graphics::DrawParam::default().dest(coords);
-            //err
-            graphics::draw(ctx, &txt, params).unwrap();
+                self.ui.actions[pos].rect_obj.y + 5.0,30.0,
+            );
         }
 
-        let mut txt = graphics::Text::new(format!("Owner: {}", self.ui.curr_square.owner));
-        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
+        // Tile info
 
-        let coords = [
+        draw_text(
+            ctx,
+            format!("Owner: {}", self.ui.curr_square.owner),
             self.ui.actions[6].rect_obj.x + 5.0,
-            self.ui.actions[6].rect_obj.y + 40.0,
-        ];
+            self.ui.actions[6].rect_obj.y + 40.0,20.0,
+        );
 
-        let params = graphics::DrawParam::default().dest(coords);
-        //err
-        graphics::draw(ctx, &txt, params).unwrap();
 
-        let mut txt =
-            graphics::Text::new(format!("Population: {}", self.ui.curr_square.population));
-        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-
-        let coords = [
+        draw_text(
+            ctx,
+            format!("Population: {}", self.ui.curr_square.population),
             self.ui.actions[6].rect_obj.x + 5.0,
-            self.ui.actions[6].rect_obj.y + 65.0,
-        ];
+            self.ui.actions[6].rect_obj.y + 65.0,20.0,
+        );
 
-        let params = graphics::DrawParam::default().dest(coords);
-        //err
-        graphics::draw(ctx, &txt, params).unwrap();
 
-        let mut txt =
-            graphics::Text::new(format!("Can craft: {}", self.ui.curr_square.can_create_on));
-        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-
-        let coords = [
+        draw_text(
+            ctx,
+            format!("Can craft: {}", self.ui.curr_square.can_create_on),
             self.ui.actions[6].rect_obj.x + 5.0,
-            self.ui.actions[6].rect_obj.y + 90.0,
-        ];
+            self.ui.actions[6].rect_obj.y + 90.0,20.0,
+        );
 
-        let params = graphics::DrawParam::default().dest(coords);
-        //err
-        graphics::draw(ctx, &txt, params).unwrap();
-
-        let mut txt = graphics::Text::new(format!("Usable: {}", self.ui.curr_square.usable));
-        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-
-        let coords = [
+        draw_text(
+            ctx,
+            format!("Usable: {}", self.ui.curr_square.usable),
             self.ui.actions[6].rect_obj.x + 5.0,
-            self.ui.actions[6].rect_obj.y + 115.0,
-        ];
+            self.ui.actions[6].rect_obj.y + 115.0,20.0,
+        );
 
-        let params = graphics::DrawParam::default().dest(coords);
-        //err
-        graphics::draw(ctx, &txt, params).unwrap();
-
-        let mut txt = graphics::Text::new(format!("Searched: {}", self.ui.curr_square.searched));
-        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-
-        let coords = [
+        draw_text(
+            ctx,
+            format!("Searched: {}", self.ui.curr_square.searched),
             self.ui.actions[6].rect_obj.x + 5.0,
-            self.ui.actions[6].rect_obj.y + 140.0,
-        ];
+            self.ui.actions[6].rect_obj.y + 140.0,20.0,
+        );
 
-        let params = graphics::DrawParam::default().dest(coords);
-        //err
-        graphics::draw(ctx, &txt, params).unwrap();
-
-        let mut txt = graphics::Text::new(format!("Influence: {}", self.ui.curr_player.influence));
-        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-
-        let coords = [
+        //Player info
+        draw_text(
+            ctx,
+            format!("Influence: {}", self.ui.curr_player.influence),
             self.ui.actions[8].rect_obj.x + 5.0,
-            self.ui.actions[8].rect_obj.y + 40.0,
-        ];
+            self.ui.actions[8].rect_obj.y + 40.0,20.0,
+        );
 
-        let params = graphics::DrawParam::default().dest(coords);
-        //err
-        graphics::draw(ctx, &txt, params).unwrap();
-
-        let mut txt = graphics::Text::new(format!("Science: {}", self.ui.curr_player.science));
-        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-
-        let coords = [
+        draw_text(
+            ctx,
+            format!("Science: {}", self.ui.curr_player.science),
             self.ui.actions[8].rect_obj.x + 5.0,
-            self.ui.actions[8].rect_obj.y + 65.0,
-        ];
+            self.ui.actions[8].rect_obj.y + 65.0,20.0,
+        );
 
-        let params = graphics::DrawParam::default().dest(coords);
-        //err
-        graphics::draw(ctx, &txt, params).unwrap();
 
-        let mut txt = graphics::Text::new(format!("Fertility: {}", self.ui.curr_player.fertility));
-        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-
-        let coords = [
+        draw_text(
+            ctx,
+            format!("Fertility: {}", self.ui.curr_player.fertility),
             self.ui.actions[8].rect_obj.x + 5.0,
-            self.ui.actions[8].rect_obj.y + 90.0,
-        ];
+            self.ui.actions[8].rect_obj.y + 90.0,20.0,
+        );
 
-        let params = graphics::DrawParam::default().dest(coords);
-        //err
-        graphics::draw(ctx, &txt, params).unwrap();
-
-        let mut txt = graphics::Text::new(format!("Diplomacy: {}", self.ui.curr_player.diplomacy));
-        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-
-        let coords = [
+        draw_text(
+            ctx,
+            format!("Diplomacy: {}", self.ui.curr_player.diplomacy),
             self.ui.actions[8].rect_obj.x + 5.0,
-            self.ui.actions[8].rect_obj.y + 115.0,
-        ];
+            self.ui.actions[8].rect_obj.y + 115.0,20.0,
+        );
 
-        let params = graphics::DrawParam::default().dest(coords);
-        //err
-        graphics::draw(ctx, &txt, params).unwrap();
-
-        let mut txt = graphics::Text::new(format!("Mastery: {}", self.ui.curr_player.mastery));
-        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-
-        let coords = [
+        draw_text(
+            ctx,
+            format!("Mastery: {}", self.ui.curr_player.mastery),
             self.ui.actions[8].rect_obj.x + 5.0,
-            self.ui.actions[8].rect_obj.y + 140.0,
-        ];
+            self.ui.actions[8].rect_obj.y + 140.0,20.0,
+        );
 
-        let params = graphics::DrawParam::default().dest(coords);
-        //err
-        graphics::draw(ctx, &txt, params).unwrap();
-
-        let mut txt =
-            graphics::Text::new(format!("Population: {}", self.ui.curr_player.population));
-        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(20.0));
-
-        let coords = [
+        draw_text(
+            ctx,
+            format!("Population: {}", self.ui.curr_player.population),
             self.ui.actions[8].rect_obj.x + 5.0,
-            self.ui.actions[8].rect_obj.y + 170.0,
-        ];
+            self.ui.actions[8].rect_obj.y + 170.0,20.0,
+        );
 
-        let params = graphics::DrawParam::default().dest(coords);
-        //err
-        graphics::draw(ctx, &txt, params).unwrap();
-
-
-        let mut txt =
-            graphics::Text::new(format!("{}", self.end_time - timer::duration_to_f64(timer::time_since_start(ctx)).trunc()));
-        txt.set_font(graphics::Font::default(), graphics::Scale::uniform(30.0));
-
-        let coords = [
+        draw_text(
+            ctx,
+            format!(
+                "{}",
+                self.end_time - timer::duration_to_f64(timer::time_since_start(ctx)).trunc()
+            ),
             self.ui.actions[5].rect_obj.x + 145.0,
-            self.ui.actions[5].rect_obj.y + 5.0,
-        ];
+            self.ui.actions[5].rect_obj.y + 5.0,30.0,
+        );
 
-        let params = graphics::DrawParam::default().dest(coords);
-        graphics::draw(ctx, &txt, params).unwrap();
         graphics::present(ctx)
     }
 
@@ -513,6 +478,18 @@ impl EventHandler for MyGame {
                 }
                 if action.as_ref().unwrap().text.contains("Move") {
                     self.moving = true;
+                }
+                if action.as_ref().unwrap().text.contains("Create") {
+                    self.create = true;
+                }
+                if action.as_ref().unwrap().text.contains("Search") {
+                    self.search = true;
+                }
+                if action.as_ref().unwrap().text.contains("Use") {
+                    self.use_item = true;
+                }
+                if action.as_ref().unwrap().text.contains("End") {
+                    self.end_turn = true;
                 }
             }
         }
