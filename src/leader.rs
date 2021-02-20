@@ -4,6 +4,7 @@ extern crate rand;
 use ggez::Context;
 use rand::Rng;
 
+use items::*;
 use map::*;
 
 #[derive(Clone)]
@@ -18,8 +19,7 @@ pub struct Leader {
     pub search_counter: u32,
     pub color: ggez::graphics::Color,
     pub owned_tiles: Vec<Position>,
-    //pub Inventory:       []TempItem,
-    pub inventory_size: u32,
+    pub inventory: Vec<Expandable>,
     pub artefact_counter: u32,
 }
 
@@ -37,8 +37,7 @@ impl Leader {
             search_counter: 0,
             color: color,
             owned_tiles: vec![],
-            //pub Inventory:       []TempItem,
-            inventory_size: 0,
+            inventory: vec![],
             artefact_counter: 0,
         };
         res

@@ -13,7 +13,7 @@ pub struct Relics {
     //pub has_been_found: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Expandable {
     pub name: String,
     pub warpower: i32,
@@ -22,7 +22,6 @@ pub struct Expandable {
     pub fertility: i32,
     pub diplomacy: i32,
     pub mastery: i32,
-    //pub count: bool,
 }
 
 pub fn read_expandables(path: String) -> Vec<Expandable> {

@@ -15,6 +15,7 @@ use ggez::graphics::{Color, DrawParam};
 use ggez::input::mouse::MouseButton;
 use ggez::timer;
 use ggez::{graphics, Context, GameResult};
+use rand::Rng;
 use std::env;
 
 fn main() {
@@ -334,8 +335,48 @@ impl EventHandler for MyGame {
             self.game_state = State::Start;
             self.field_click = false;
             self.second_click = false;
-        }
+        } else if self.game_state == State::Create {
+            let i = self.ui.curr_square.i;
+            let j = self.ui.curr_square.j;
+            if self.ui.curr_player.inventory.len() < 20
+                && self.map[i][j].can_create_on
+                && actions::player_owned(
+                    self.ui.curr_player.owned_tiles.clone(),
+                    leader::Position::new(i, j),
+                )
+            {
+                let mut rng = rand::thread_rng();
+                let item = rng.gen_range(0..self.tmp_items.len());
+                self.ui
+                    .curr_player
+                    .inventory
+                    .push(self.tmp_items[item].clone());
+                // TODO make true at end of turn
+                self.map[i][j].can_create_on = false;
 
+                //make sure we change the actual player
+                for (pos, _e) in self.players.clone().iter().enumerate() {
+                    if self.players[pos].name == self.ui.curr_player.name {
+                        self.players[pos]
+                            .inventory
+                            .push(self.tmp_items[item].clone());
+                    }
+                }
+                self.map[i][j].color = self.ui.curr_player.color;
+                self.map[i][j].rect_mesh = graphics::Mesh::new_rectangle(
+                    _ctx,
+                    graphics::DrawMode::fill(),
+                    self.ui.curr_square.rect_obj,
+                    self.ui.curr_player.color,
+                )
+                .unwrap();
+            }
+            self.game_state = State::Start;
+            self.field_click = false;
+        } else if self.game_state == State::Search {
+        } else if self.game_state == State::UseItem {
+        } else if self.game_state == State::EndTurn {
+        }
         Ok(())
     }
 
