@@ -351,7 +351,7 @@ impl EventHandler for MyGame {
                 )
             {
                 let mut rng = rand::thread_rng();
-                let item = rng.gen_range(0..(self.tmp_items.len()-1));
+                let item = rng.gen_range(0..(self.tmp_items.len() - 1));
                 self.ui
                     .curr_player
                     .inventory
@@ -379,6 +379,78 @@ impl EventHandler for MyGame {
             self.game_state = State::Start;
             self.field_click = false;
         } else if self.game_state == State::Search {
+            let i = self.ui.curr_square.i;
+            let j = self.ui.curr_square.j;
+            if !self.map[i][j].searched
+                && actions::player_owned(
+                    self.ui.curr_player.owned_tiles.clone(),
+                    leader::Position::new(i, j),
+                )
+            {
+                // make name appear in inventory.
+                if self.ui.curr_player.search_counter == 25 {
+                    let mut rng = rand::thread_rng();
+                    let item = rng.gen_range(0..self.perm_items.len());
+                    let buff: items::Relics = self.perm_items[item].clone();
+                    self.perm_items.remove(item);
+                    self.ui.curr_player.diplomacy += buff.diplomacy;
+                    self.ui.curr_player.fertility += buff.fertility;
+                    self.ui.curr_player.science += buff.science;
+                    self.ui.curr_player.influence += buff.influence;
+                    self.ui.curr_player.mastery += buff.mastery;
+                    //make sure we change the actual player
+                    for (pos, _e) in self.players.clone().iter().enumerate() {
+                        if self.players[pos].name == self.ui.curr_player.name {
+                            self.players[pos].diplomacy += buff.diplomacy;
+                            self.players[pos].fertility += buff.fertility;
+                            self.players[pos].science += buff.science;
+                            self.players[pos].influence += buff.influence;
+                            self.players[pos].mastery += buff.mastery;
+                        }
+                    }
+                } else {
+                    let mut rng = rand::thread_rng();
+                    let dice = rng.gen_range(1..26);
+                    if dice == 25 {
+                        let item = rng.gen_range(0..self.perm_items.len());
+                        let buff: items::Relics = self.perm_items[item].clone();
+                        self.perm_items.remove(item);
+                        self.ui.curr_player.diplomacy += buff.diplomacy;
+                        self.ui.curr_player.fertility += buff.fertility;
+                        self.ui.curr_player.science += buff.science;
+                        self.ui.curr_player.influence += buff.influence;
+                        self.ui.curr_player.mastery += buff.mastery;
+                        //make sure we change the actual player
+                        for (pos, _e) in self.players.clone().iter().enumerate() {
+                            if self.players[pos].name == self.ui.curr_player.name {
+                                self.players[pos].diplomacy += buff.diplomacy;
+                                self.players[pos].fertility += buff.fertility;
+                                self.players[pos].science += buff.science;
+                                self.players[pos].influence += buff.influence;
+                                self.players[pos].mastery += buff.mastery;
+                            }
+                        }
+                    } else {
+                        self.ui.curr_player.search_counter += 1;
+                        //make sure we change the actual player
+                        for (pos, _e) in self.players.clone().iter().enumerate() {
+                            if self.players[pos].name == self.ui.curr_player.name {
+                                self.players[pos].search_counter += 1;
+                            }
+                        }
+                    }
+                }
+                self.map[i][j].color = self.ui.curr_player.color;
+                self.map[i][j].rect_mesh = graphics::Mesh::new_rectangle(
+                    _ctx,
+                    graphics::DrawMode::fill(),
+                    self.ui.curr_square.rect_obj,
+                    self.ui.curr_player.color,
+                )
+                .unwrap();
+                self.game_state = State::Start;
+                self.field_click = false;
+            }
         } else if self.game_state == State::UseItem {
             //Only action that does not require tile click
             if self.ui.curr_player.inventory.len() > 0 {
@@ -404,6 +476,7 @@ impl EventHandler for MyGame {
                 }
             }
             self.game_state = State::Start;
+        //TODO: at the end we have to reduce the stats.
         } else if self.game_state == State::EndTurn {
         }
         Ok(())

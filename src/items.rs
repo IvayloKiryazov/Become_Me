@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::fs::File;
 use std::io::Read;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Relics {
     pub name: String,
     pub influence: i32,
@@ -13,7 +13,7 @@ pub struct Relics {
     //pub has_been_found: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Expandable {
     pub name: String,
     pub warpower: i32,
