@@ -10,11 +10,11 @@ use map::*;
 #[derive(Clone)]
 pub struct Leader {
     pub name: String,
-    pub influence: u32,
-    pub science: u32,
-    pub fertility: u32,
-    pub diplomacy: u32,
-    pub mastery: u32,
+    pub influence: i32,
+    pub science: i32,
+    pub fertility: i32,
+    pub diplomacy: i32,
+    pub mastery: i32,
     pub population: u32,
     pub search_counter: u32,
     pub color: ggez::graphics::Color,

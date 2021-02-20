@@ -31,6 +31,17 @@ fn main() {
     event::run(ctx, event_loop, &mut my_game).unwrap();
 }
 
+#[derive(PartialEq)]
+pub enum State {
+    Start,
+    Populate,
+    Moving,
+    Create,
+    Search,
+    UseItem,
+    EndTurn,
+}
+
 struct MyGame {
     pub map: Vec<map::Row>,
     pub players: Vec<leader::Leader>,
@@ -44,17 +55,6 @@ struct MyGame {
     pub perm_items: Vec<items::Relics>,
     pub end_time: f64,
     pub game_state: State,
-}
-
-#[derive(PartialEq)]
-pub enum State {
-    Start,
-    Populate,
-    Moving,
-    Create,
-    Search,
-    UseItem,
-    EndTurn,
 }
 
 impl MyGame {
@@ -163,12 +163,8 @@ pub fn draw_text(ctx: &mut Context, text: String, x: f32, y: f32, size: f32) {
     graphics::draw(ctx, &txt, params).unwrap();
 }
 
-impl EventHandler for MyGame {
-    //TODO: make keyboard shortcuts
-    //ТODO make stuff un-usable after they've been used
-    //TODO at the ends we have to clone the curr player to the correct place
-    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        //HighLight the tile
+impl MyGame {
+    fn highlight_tile(&mut self, _ctx: &mut Context) {
         if self.field_click {
             self.map[self.ui.prev_square.i][self.ui.prev_square.j].color = self.ui.prev_color;
             self.map[self.ui.prev_square.i][self.ui.prev_square.j].rect_mesh =
@@ -190,6 +186,15 @@ impl EventHandler for MyGame {
                 )
                 .unwrap();
         }
+    }
+}
+
+impl EventHandler for MyGame {
+    //TODO make keyboard shortcuts
+    //ТODO make stuff un-usable after they've been used
+    //TODO at the ends we have to clone the curr player to the correct place
+    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+        self.highlight_tile(_ctx);
 
         if self.game_state == State::Populate {
             let i = self.ui.curr_square.i;
@@ -335,7 +340,7 @@ impl EventHandler for MyGame {
             self.game_state = State::Start;
             self.field_click = false;
             self.second_click = false;
-        } else if self.game_state == State::Create {
+        } else if self.game_state == State::Create && self.field_click {
             let i = self.ui.curr_square.i;
             let j = self.ui.curr_square.j;
             if self.ui.curr_player.inventory.len() < 20
@@ -346,7 +351,7 @@ impl EventHandler for MyGame {
                 )
             {
                 let mut rng = rand::thread_rng();
-                let item = rng.gen_range(0..self.tmp_items.len());
+                let item = rng.gen_range(0..(self.tmp_items.len()-1));
                 self.ui
                     .curr_player
                     .inventory
@@ -375,6 +380,30 @@ impl EventHandler for MyGame {
             self.field_click = false;
         } else if self.game_state == State::Search {
         } else if self.game_state == State::UseItem {
+            //Only action that does not require tile click
+            if self.ui.curr_player.inventory.len() > 0 {
+                let mut rng = rand::thread_rng();
+                let item = rng.gen_range(0..self.ui.curr_player.inventory.len());
+                let buff: items::Expandable = self.ui.curr_player.inventory[item].clone();
+                self.ui.curr_player.inventory.remove(item);
+                self.ui.curr_player.diplomacy += buff.diplomacy;
+                self.ui.curr_player.fertility += buff.fertility;
+                self.ui.curr_player.science += buff.science;
+                self.ui.curr_player.influence += buff.influence;
+                self.ui.curr_player.mastery += buff.mastery;
+                //make sure we change the actual player
+                for (pos, _e) in self.players.clone().iter().enumerate() {
+                    if self.players[pos].name == self.ui.curr_player.name {
+                        self.players[pos].inventory.remove(item);
+                        self.players[pos].diplomacy += buff.diplomacy;
+                        self.players[pos].fertility += buff.fertility;
+                        self.players[pos].science += buff.science;
+                        self.players[pos].influence += buff.influence;
+                        self.players[pos].mastery += buff.mastery;
+                    }
+                }
+            }
+            self.game_state = State::Start;
         } else if self.game_state == State::EndTurn {
         }
         Ok(())
@@ -525,19 +554,16 @@ impl EventHandler for MyGame {
             }
 
             let action = actions::mouse_clicked_on_action(self.ui.actions.clone(), _x, _y);
+
             if action.is_some() {
-                if action.as_ref().unwrap().text.contains("Populate") {
-                    self.game_state = State::Populate;
-                } else if action.as_ref().unwrap().text.contains("Move") {
-                    self.game_state = State::Moving;
-                } else if action.as_ref().unwrap().text.contains("Create") {
-                    self.game_state = State::Create;
-                } else if action.as_ref().unwrap().text.contains("Search") {
-                    self.game_state = State::Search;
-                } else if action.as_ref().unwrap().text.contains("Use") {
-                    self.game_state = State::UseItem;
-                } else if action.as_ref().unwrap().text.contains("End") {
-                    self.game_state = State::EndTurn;
+                match action.as_ref().unwrap().text.as_str() {
+                    "Populate" => self.game_state = State::Populate,
+                    "Move" => self.game_state = State::Moving,
+                    "Create" => self.game_state = State::Create,
+                    "Search" => self.game_state = State::Search,
+                    "UseItem" => self.game_state = State::UseItem,
+                    "End Turn" => self.game_state = State::EndTurn,
+                    _ => self.game_state = State::Start,
                 }
             }
         }
