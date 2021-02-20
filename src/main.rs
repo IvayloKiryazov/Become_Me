@@ -36,16 +36,24 @@ struct MyGame {
     pub ui: ui::UI,
     pub color_pallete: Vec<Color>,
     pub field_click: bool,
-    pub populate: bool,
-    pub moving: bool,
+
     pub second_click: bool,
-    pub create: bool,
-    pub search: bool,
-    pub use_item: bool,
-    pub end_turn: bool,
+
     pub tmp_items: Vec<items::Expandable>,
     pub perm_items: Vec<items::Relics>,
     pub end_time: f64,
+    pub game_state: State,
+}
+
+#[derive(PartialEq)]
+pub enum State {
+    Start,
+    Populate,
+    Moving,
+    Create,
+    Search,
+    UseItem,
+    EndTurn,
 }
 
 impl MyGame {
@@ -126,13 +134,9 @@ impl MyGame {
             ui: _ui,
             color_pallete: color_pallete,
             field_click: false,
-            populate: false,
-            moving: false,
+
             second_click: false,
-             create: false,
-             search: false,
-             use_item: false,
-             end_turn: false,
+
             tmp_items: items::read_expandables(format!(
                 "{}\\src\\tempitems.json",
                 env::current_dir().unwrap().display()
@@ -142,6 +146,7 @@ impl MyGame {
                 env::current_dir().unwrap().display()
             )),
             end_time: timer::duration_to_f64(timer::time_since_start(_ctx)).trunc() + 30.0,
+            game_state: State::Start,
         }
     }
 }
@@ -185,7 +190,7 @@ impl EventHandler for MyGame {
                 .unwrap();
         }
 
-        if self.populate {
+        if self.game_state == State::Populate {
             let i = self.ui.curr_square.i;
             let j = self.ui.curr_square.j;
             if self.field_click
@@ -223,9 +228,9 @@ impl EventHandler for MyGame {
                 )
                 .unwrap();
             }
-            self.populate = false;
+            self.game_state = State::Start;
             self.field_click = false;
-        } else if self.moving && self.second_click {
+        } else if self.game_state == State::Moving && self.second_click {
             let toi = self.ui.curr_square.i;
             let toj = self.ui.curr_square.j;
             let fromi = self.ui.prev_square.i;
@@ -326,7 +331,7 @@ impl EventHandler for MyGame {
                 )
                 .unwrap();
             }
-            self.moving = false;
+            self.game_state = State::Start;
             self.field_click = false;
             self.second_click = false;
         }
@@ -346,51 +351,52 @@ impl EventHandler for MyGame {
             graphics::draw(ctx, &self.ui.actions[pos].rect_mesh, DrawParam::default())?;
             draw_text(
                 ctx,
-                format!(
-                    "{}", self.ui.actions[pos].text
-                ),
+                format!("{}", self.ui.actions[pos].text),
                 self.ui.actions[pos].rect_obj.x + 5.0,
-                self.ui.actions[pos].rect_obj.y + 5.0,30.0,
+                self.ui.actions[pos].rect_obj.y + 5.0,
+                30.0,
             );
         }
 
         // Tile info
-
         draw_text(
             ctx,
             format!("Owner: {}", self.ui.curr_square.owner),
             self.ui.actions[6].rect_obj.x + 5.0,
-            self.ui.actions[6].rect_obj.y + 40.0,20.0,
+            self.ui.actions[6].rect_obj.y + 40.0,
+            20.0,
         );
-
 
         draw_text(
             ctx,
             format!("Population: {}", self.ui.curr_square.population),
             self.ui.actions[6].rect_obj.x + 5.0,
-            self.ui.actions[6].rect_obj.y + 65.0,20.0,
+            self.ui.actions[6].rect_obj.y + 65.0,
+            20.0,
         );
-
 
         draw_text(
             ctx,
             format!("Can craft: {}", self.ui.curr_square.can_create_on),
             self.ui.actions[6].rect_obj.x + 5.0,
-            self.ui.actions[6].rect_obj.y + 90.0,20.0,
+            self.ui.actions[6].rect_obj.y + 90.0,
+            20.0,
         );
 
         draw_text(
             ctx,
             format!("Usable: {}", self.ui.curr_square.usable),
             self.ui.actions[6].rect_obj.x + 5.0,
-            self.ui.actions[6].rect_obj.y + 115.0,20.0,
+            self.ui.actions[6].rect_obj.y + 115.0,
+            20.0,
         );
 
         draw_text(
             ctx,
             format!("Searched: {}", self.ui.curr_square.searched),
             self.ui.actions[6].rect_obj.x + 5.0,
-            self.ui.actions[6].rect_obj.y + 140.0,20.0,
+            self.ui.actions[6].rect_obj.y + 140.0,
+            20.0,
         );
 
         //Player info
@@ -398,43 +404,48 @@ impl EventHandler for MyGame {
             ctx,
             format!("Influence: {}", self.ui.curr_player.influence),
             self.ui.actions[8].rect_obj.x + 5.0,
-            self.ui.actions[8].rect_obj.y + 40.0,20.0,
+            self.ui.actions[8].rect_obj.y + 40.0,
+            20.0,
         );
 
         draw_text(
             ctx,
             format!("Science: {}", self.ui.curr_player.science),
             self.ui.actions[8].rect_obj.x + 5.0,
-            self.ui.actions[8].rect_obj.y + 65.0,20.0,
+            self.ui.actions[8].rect_obj.y + 65.0,
+            20.0,
         );
-
 
         draw_text(
             ctx,
             format!("Fertility: {}", self.ui.curr_player.fertility),
             self.ui.actions[8].rect_obj.x + 5.0,
-            self.ui.actions[8].rect_obj.y + 90.0,20.0,
+            self.ui.actions[8].rect_obj.y + 90.0,
+            20.0,
         );
 
         draw_text(
             ctx,
             format!("Diplomacy: {}", self.ui.curr_player.diplomacy),
             self.ui.actions[8].rect_obj.x + 5.0,
-            self.ui.actions[8].rect_obj.y + 115.0,20.0,
+            self.ui.actions[8].rect_obj.y + 115.0,
+            20.0,
         );
 
         draw_text(
             ctx,
             format!("Mastery: {}", self.ui.curr_player.mastery),
             self.ui.actions[8].rect_obj.x + 5.0,
-            self.ui.actions[8].rect_obj.y + 140.0,20.0,
+            self.ui.actions[8].rect_obj.y + 140.0,
+            20.0,
         );
 
         draw_text(
             ctx,
             format!("Population: {}", self.ui.curr_player.population),
             self.ui.actions[8].rect_obj.x + 5.0,
-            self.ui.actions[8].rect_obj.y + 170.0,20.0,
+            self.ui.actions[8].rect_obj.y + 170.0,
+            20.0,
         );
 
         draw_text(
@@ -444,7 +455,8 @@ impl EventHandler for MyGame {
                 self.end_time - timer::duration_to_f64(timer::time_since_start(ctx)).trunc()
             ),
             self.ui.actions[5].rect_obj.x + 145.0,
-            self.ui.actions[5].rect_obj.y + 5.0,30.0,
+            self.ui.actions[5].rect_obj.y + 5.0,
+            30.0,
         );
 
         graphics::present(ctx)
@@ -460,7 +472,7 @@ impl EventHandler for MyGame {
         if ggez::input::mouse::button_pressed(_ctx, _button) && _button == MouseButton::Left {
             let cur_square = actions::mouse_clicked_on_field(self.map.clone(), _x, _y);
             if cur_square.is_some() {
-                if self.moving {
+                if self.game_state == State::Moving {
                     self.second_click = true;
                 }
                 if self.ui.curr_square.color != self.color_pallete[ui::YELLOW] {
@@ -474,22 +486,17 @@ impl EventHandler for MyGame {
             let action = actions::mouse_clicked_on_action(self.ui.actions.clone(), _x, _y);
             if action.is_some() {
                 if action.as_ref().unwrap().text.contains("Populate") {
-                    self.populate = true;
-                }
-                if action.as_ref().unwrap().text.contains("Move") {
-                    self.moving = true;
-                }
-                if action.as_ref().unwrap().text.contains("Create") {
-                    self.create = true;
-                }
-                if action.as_ref().unwrap().text.contains("Search") {
-                    self.search = true;
-                }
-                if action.as_ref().unwrap().text.contains("Use") {
-                    self.use_item = true;
-                }
-                if action.as_ref().unwrap().text.contains("End") {
-                    self.end_turn = true;
+                    self.game_state = State::Populate;
+                } else if action.as_ref().unwrap().text.contains("Move") {
+                    self.game_state = State::Moving;
+                } else if action.as_ref().unwrap().text.contains("Create") {
+                    self.game_state = State::Create;
+                } else if action.as_ref().unwrap().text.contains("Search") {
+                    self.game_state = State::Search;
+                } else if action.as_ref().unwrap().text.contains("Use") {
+                    self.game_state = State::UseItem;
+                } else if action.as_ref().unwrap().text.contains("End") {
+                    self.game_state = State::EndTurn;
                 }
             }
         }
