@@ -121,8 +121,8 @@ impl UI {
             ctx,
             0.0,
             0.0,
-            555.0,
             195.0,
+            355.0,
             "Your stats:".to_string(),
             color_pallete[BROWN],
         );
@@ -130,10 +130,10 @@ impl UI {
 
         let rect = Rectangle::new(
             ctx,
-            0.0,
             200.0,
-            555.0,
-            145.0,
+            0.0,
+            355.0,
+            355.0,
             "Inventory:".to_string(),
             color_pallete[PURPLE],
         );

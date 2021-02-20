@@ -544,6 +544,20 @@ impl EventHandler for MyGame {
             20.0,
         );
 
+        //Inventory
+        let mut initial_y = 35.0;
+        for (pos, _) in self.ui.curr_player.inventory.iter().enumerate() {
+            draw_text(
+                ctx,
+                format!("{}", self.ui.curr_player.inventory[pos].name),
+                self.ui.actions[9].rect_obj.x + 5.0,
+                self.ui.actions[9].rect_obj.y + initial_y,
+                20.0,
+            );
+             initial_y += 20.0;
+        }
+
+        //Timer
         draw_text(
             ctx,
             format!(
