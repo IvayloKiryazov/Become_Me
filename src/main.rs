@@ -48,9 +48,7 @@ struct MyGame {
     pub ui: ui::UI,
     pub color_pallete: Vec<Color>,
     pub field_click: bool,
-
     pub second_click: bool,
-
     pub tmp_items: Vec<items::Expandable>,
     pub perm_items: Vec<items::Relics>,
     pub end_time: f64,
@@ -135,9 +133,15 @@ impl MyGame {
             ui: _ui,
             color_pallete: color_pallete,
             field_click: false,
-
             second_click: false,
-
+            /*tmp_items: items::read_expandables(format!(
+                "{}\\..\\..\\src\\tempitems.json",
+                env::current_dir().unwrap().display()
+            )),
+            perm_items: items::read_relics(format!(
+                "{}\\..\\..\\src\\permanentitems.json",
+                env::current_dir().unwrap().display()
+            )),*/
             tmp_items: items::read_expandables(format!(
                 "{}\\src\\tempitems.json",
                 env::current_dir().unwrap().display()
@@ -187,6 +191,15 @@ impl MyGame {
                 .unwrap();
         }
     }
+
+    fn update_player(&mut self){
+        //TODO test edge cases on this
+        for (pos, _e) in self.players.clone().iter().enumerate() {
+            if self.players[pos].name == self.ui.curr_player.name {
+                self.players[pos] = self.ui.curr_player.clone();
+            }
+        }
+    }
 }
 
 impl EventHandler for MyGame {
@@ -196,15 +209,14 @@ impl EventHandler for MyGame {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         self.highlight_tile(_ctx);
 
-        if self.game_state == State::Populate {
-            let i = self.ui.curr_square.i;
-            let j = self.ui.curr_square.j;
-            if self.field_click
-                && actions::player_owned(
-                    self.ui.curr_player.owned_tiles.clone(),
-                    leader::Position::new(i, j),
-                )
-            {
+        let i = self.ui.curr_square.i;
+        let j = self.ui.curr_square.j;
+
+        if self.game_state == State::Populate && self.field_click {
+            if actions::player_owned(
+                self.ui.curr_player.owned_tiles.clone(),
+                leader::Position::new(i, j),
+            ) {
                 if self.map[i][j].population < 50 {
                     let increase = self.map[i][j].population / 2;
                     if (self.map[i][j].population + increase) >= 50 {
@@ -217,12 +229,7 @@ impl EventHandler for MyGame {
                     }
 
                     self.ui.curr_square.population = self.map[i][j].population;
-                    //make sure we change the actual player
-                    for (pos, _e) in self.players.clone().iter().enumerate() {
-                        if self.players[pos].name == self.ui.curr_player.name {
-                            self.players[pos].population = self.ui.curr_player.population;
-                        }
-                    }
+                    self.update_player();
                 }
 
                 self.map[i][j].color = self.ui.curr_player.color;
@@ -237,8 +244,8 @@ impl EventHandler for MyGame {
             self.game_state = State::Start;
             self.field_click = false;
         } else if self.game_state == State::Moving && self.second_click {
-            let toi = self.ui.curr_square.i;
-            let toj = self.ui.curr_square.j;
+            let toi = i;
+            let toj = j;
             let fromi = self.ui.prev_square.i;
             let fromj = self.ui.prev_square.j;
 
@@ -259,7 +266,7 @@ impl EventHandler for MyGame {
                     //we win the battle
                     if self.map[fromi][fromj].population >= self.map[toi][toj].population {
                         let result =
-                            self.map[fromi][fromi].population - self.map[toi][toj].population;
+                            self.map[fromi][fromj].population - self.map[toi][toj].population;
                         let loss = self.map[toi][toj].population;
                         self.map[toi][toj].population = result;
                         self.ui.curr_player.population -= loss;
@@ -267,12 +274,7 @@ impl EventHandler for MyGame {
                         self.map[fromi][fromj].population = 0;
                         self.map[toi][toj].owner = self.map[fromi][fromj].owner.clone();
 
-                        //make sure we change the actual player
-                        for (pos, _e) in self.players.clone().iter().enumerate() {
-                            if self.players[pos].name == self.ui.curr_player.name {
-                                self.players[pos].population = self.ui.curr_player.population;
-                            }
-                        }
+                        self.update_player();
 
                         //TODO test if this is correctly working.
                         if !self.map[toi][toj].owner.contains("Ol") {
@@ -301,12 +303,7 @@ impl EventHandler for MyGame {
                         self.ui.curr_player.population -= self.map[fromi][fromj].population;
                         self.map[fromi][fromj].population = 0;
 
-                        //make sure we change the actual player
-                        for (pos, _e) in self.players.clone().iter().enumerate() {
-                            if self.players[pos].name == self.ui.curr_player.name {
-                                self.players[pos].population = self.ui.curr_player.population;
-                            }
-                        }
+                        self.update_player();
 
                         //TODO test if this is correctly working.
                         if !self.map[toi][toj].owner.contains("Ol") {
@@ -341,8 +338,6 @@ impl EventHandler for MyGame {
             self.field_click = false;
             self.second_click = false;
         } else if self.game_state == State::Create && self.field_click {
-            let i = self.ui.curr_square.i;
-            let j = self.ui.curr_square.j;
             if self.ui.curr_player.inventory.len() < 20
                 && self.map[i][j].can_create_on
                 && actions::player_owned(
@@ -359,14 +354,8 @@ impl EventHandler for MyGame {
                 // TODO make true at end of turn
                 self.map[i][j].can_create_on = false;
 
-                //make sure we change the actual player
-                for (pos, _e) in self.players.clone().iter().enumerate() {
-                    if self.players[pos].name == self.ui.curr_player.name {
-                        self.players[pos]
-                            .inventory
-                            .push(self.tmp_items[item].clone());
-                    }
-                }
+                self.update_player();
+
                 self.map[i][j].color = self.ui.curr_player.color;
                 self.map[i][j].rect_mesh = graphics::Mesh::new_rectangle(
                     _ctx,
@@ -378,9 +367,7 @@ impl EventHandler for MyGame {
             }
             self.game_state = State::Start;
             self.field_click = false;
-        } else if self.game_state == State::Search {
-            let i = self.ui.curr_square.i;
-            let j = self.ui.curr_square.j;
+        } else if self.game_state == State::Search && self.field_click {
             if !self.map[i][j].searched
                 && actions::player_owned(
                     self.ui.curr_player.owned_tiles.clone(),
@@ -398,16 +385,6 @@ impl EventHandler for MyGame {
                     self.ui.curr_player.science += buff.science;
                     self.ui.curr_player.influence += buff.influence;
                     self.ui.curr_player.mastery += buff.mastery;
-                    //make sure we change the actual player
-                    for (pos, _e) in self.players.clone().iter().enumerate() {
-                        if self.players[pos].name == self.ui.curr_player.name {
-                            self.players[pos].diplomacy += buff.diplomacy;
-                            self.players[pos].fertility += buff.fertility;
-                            self.players[pos].science += buff.science;
-                            self.players[pos].influence += buff.influence;
-                            self.players[pos].mastery += buff.mastery;
-                        }
-                    }
                 } else {
                     let mut rng = rand::thread_rng();
                     let dice = rng.gen_range(1..26);
@@ -420,26 +397,11 @@ impl EventHandler for MyGame {
                         self.ui.curr_player.science += buff.science;
                         self.ui.curr_player.influence += buff.influence;
                         self.ui.curr_player.mastery += buff.mastery;
-                        //make sure we change the actual player
-                        for (pos, _e) in self.players.clone().iter().enumerate() {
-                            if self.players[pos].name == self.ui.curr_player.name {
-                                self.players[pos].diplomacy += buff.diplomacy;
-                                self.players[pos].fertility += buff.fertility;
-                                self.players[pos].science += buff.science;
-                                self.players[pos].influence += buff.influence;
-                                self.players[pos].mastery += buff.mastery;
-                            }
-                        }
                     } else {
                         self.ui.curr_player.search_counter += 1;
-                        //make sure we change the actual player
-                        for (pos, _e) in self.players.clone().iter().enumerate() {
-                            if self.players[pos].name == self.ui.curr_player.name {
-                                self.players[pos].search_counter += 1;
-                            }
-                        }
                     }
                 }
+                self.update_player();
                 self.map[i][j].color = self.ui.curr_player.color;
                 self.map[i][j].rect_mesh = graphics::Mesh::new_rectangle(
                     _ctx,
@@ -448,6 +410,7 @@ impl EventHandler for MyGame {
                     self.ui.curr_player.color,
                 )
                 .unwrap();
+                self.map[i][j].searched = true;
                 self.game_state = State::Start;
                 self.field_click = false;
             }
@@ -463,17 +426,7 @@ impl EventHandler for MyGame {
                 self.ui.curr_player.science += buff.science;
                 self.ui.curr_player.influence += buff.influence;
                 self.ui.curr_player.mastery += buff.mastery;
-                //make sure we change the actual player
-                for (pos, _e) in self.players.clone().iter().enumerate() {
-                    if self.players[pos].name == self.ui.curr_player.name {
-                        self.players[pos].inventory.remove(item);
-                        self.players[pos].diplomacy += buff.diplomacy;
-                        self.players[pos].fertility += buff.fertility;
-                        self.players[pos].science += buff.science;
-                        self.players[pos].influence += buff.influence;
-                        self.players[pos].mastery += buff.mastery;
-                    }
-                }
+                self.update_player();
             }
             self.game_state = State::Start;
         //TODO: at the end we have to reduce the stats.
