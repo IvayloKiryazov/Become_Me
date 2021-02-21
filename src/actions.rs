@@ -51,6 +51,7 @@ pub fn player_owned(map: Vec<Position>, position: Position) -> bool {
     return false;
 }
 
+
 // This is also needed for us to know that we don't have teleporting units.
 pub fn is_adjacent(to: Endpoint, from: Endpoint) -> bool {
     let mut is_adjacent = false;
@@ -75,3 +76,35 @@ pub fn is_adjacent(to: Endpoint, from: Endpoint) -> bool {
     }
     is_adjacent
 }
+
+
+#[test]
+fn test_basic_is_owned() {
+    let mut  map: Vec<Position> = vec![];
+    map.push(Position::new(1,2));
+    let position = Position::new(1,2);
+    assert_eq!(player_owned(map, position), true);
+}  
+
+#[test]
+fn test_basic_is_not_owned() {
+    let mut  map: Vec<Position> = vec![];
+    map.push(Position::new(1,2));
+    let position = Position::new(2,2);
+    assert_eq!(player_owned(map, position), false);
+}  
+
+
+#[test]
+fn test_basic_is_adj() {
+    let position1 = Endpoint::new(2,2);
+    let position2 = Endpoint::new(1,2);
+    assert_eq!(is_adjacent(position1, position2), true);
+}  
+
+#[test]
+fn test_basic_is_not_adj() {
+    let position1 = Endpoint::new(2,2);
+    let position2 = Endpoint::new(5,5);
+    assert_eq!(is_adjacent(position1, position2), false);
+}  

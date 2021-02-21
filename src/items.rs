@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use std::fs::File;
 use std::io::Read;
+use std::env;
 
 // Permanent buffs
 #[derive(Deserialize, Clone, Debug)]
@@ -48,4 +49,49 @@ pub fn read_relics(path: String) -> Vec<Relics> {
         println!("{:?}", elem);
     }
     array
+}
+
+
+#[test]
+fn test_basic_read() {           
+    let tmp_items = read_expandables(format!(
+    "{}\\src\\tempitems.json",
+    env::current_dir().unwrap().display()
+    ));
+
+    let res = "Stick";
+    assert_eq!(tmp_items[0].name, res);
+    let res = 0;
+    assert_eq!(tmp_items[0].influence, res);
+    let res = 0;
+    assert_eq!(tmp_items[0].science, res);
+    let res = 0;
+    assert_eq!(tmp_items[0].fertility, res);
+    let res = 0;
+    assert_eq!(tmp_items[0].diplomacy, res);
+    let res = 0;
+    assert_eq!(tmp_items[0].mastery, res);
+}
+
+
+#[test]
+fn test_basic_read_relic() {           
+    let perm_items= read_relics(format!(
+        "{}\\src\\permanentitems.json",
+        env::current_dir().unwrap().display()
+    ));
+
+
+    let res = "Spear Of Asparuh";
+    assert_eq!(perm_items[0].name, res);
+    let res = 0;
+    assert_eq!(perm_items[0].influence, res);
+    let res = 0;
+    assert_eq!(perm_items[0].science, res);
+    let res = 0;
+    assert_eq!(perm_items[0].fertility, res);
+    let res = 0;
+    assert_eq!(perm_items[0].diplomacy, res);
+    let res = 2;
+    assert_eq!(perm_items[0].mastery, res);
 }
