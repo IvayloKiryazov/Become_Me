@@ -18,6 +18,7 @@ use ggez::{graphics, Context, GameResult};
 use rand::Rng;
 use std::env;
 
+// TODO make it file dependant one day
 pub const TURN_TIME: f64 = 30.0;
 
 fn main() {
@@ -33,6 +34,7 @@ fn main() {
     event::run(ctx, event_loop, &mut my_game).unwrap();
 }
 
+// Start is an empty state
 #[derive(PartialEq)]
 pub enum State {
     Start,
@@ -172,6 +174,7 @@ pub fn draw_text(ctx: &mut Context, text: String, x: f32, y: f32, size: f32) {
 }
 
 impl MyGame {
+    // We manually "un-highlight" when an action is complete.
     fn highlight_tile(&mut self, _ctx: &mut Context) {
         if self.field_click {
             self.map[self.ui.prev_square.i][self.ui.prev_square.j].color = self.ui.prev_color;
@@ -196,6 +199,7 @@ impl MyGame {
         }
     }
 
+    // Most actions work with current player, which is a clone of a certain player
     fn update_player(&mut self) {
         for (pos, _e) in self.players.clone().iter().enumerate() {
             if self.players[pos].name == self.ui.curr_player.name {
@@ -425,7 +429,7 @@ impl EventHandler for MyGame {
                 self.update_player();
             }
             self.game_state = State::Start;
-        //TODO: at the end we have to reduce the stats.
+            //TODO: at the end we have to reduce the stats.
         } else if self.game_state == State::EndTurn {
             self.update_player();
             for (pos, _e) in self.players.clone().iter().enumerate() {
@@ -449,6 +453,7 @@ impl EventHandler for MyGame {
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx, graphics::BLACK);
+        // Board
         for i in 0..17 {
             for j in 0..17 {
                 graphics::draw(ctx, &self.map[i][j].rect_mesh, DrawParam::default())?;

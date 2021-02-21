@@ -7,7 +7,6 @@ use ggez::Context;
 use leader::*;
 use map::*;
 
-//TODO get these their own place
 pub const YELLOW: usize = 7;
 pub const BLUE: usize = 6;
 pub const GRAY: usize = 5;
@@ -17,6 +16,9 @@ pub const BROWN: usize = 2;
 pub const PURPLE: usize = 1;
 pub const CYAN: usize = 0;
 
+// This structure holds everything needed for us to work with the UI
+// It has features of highlighting and showing the player the current 
+// state of the board
 pub struct UI {
     pub curr_player: Leader,
     pub actions: Vec<Rectangle>,

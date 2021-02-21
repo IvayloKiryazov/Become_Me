@@ -7,6 +7,8 @@ use rand::Rng;
 use items::*;
 use map::*;
 
+
+// This structure holds all the neccessary information for the Leader.
 #[derive(Clone)]
 pub struct Leader {
     pub name: String,
@@ -23,6 +25,7 @@ pub struct Leader {
     pub artefact_counter: u32,
 }
 
+// We want slightly random stats for the players.
 impl Leader {
     pub fn new(name: String, color: ggez::graphics::Color) -> Self {
         let mut rng = rand::thread_rng();
@@ -43,6 +46,7 @@ impl Leader {
         res
     }
 
+    // For now we just support the starting 25 tiles in each corner
     pub fn starting_village(
         &mut self,
         ctx: &mut Context,
@@ -84,6 +88,8 @@ impl Leader {
     }
 }
 
+// Utility struct. 
+// TODO unify it with Position.
 #[derive(Clone)]
 pub struct Endpoint {
     pub x: i32,

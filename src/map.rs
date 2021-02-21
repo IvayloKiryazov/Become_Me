@@ -56,6 +56,8 @@ impl Square {
     }
 }
 
+// Rectangle unifies the obj and UI part of the structure.
+//This is more of an utility struct.
 #[derive(Clone)]
 pub struct Rectangle {
     pub rect_obj: Rect,

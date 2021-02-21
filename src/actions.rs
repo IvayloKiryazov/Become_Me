@@ -1,6 +1,8 @@
 use leader::*;
 use map::*;
 
+// UI utility
+// The first 6 are clickable buttons
 pub fn mouse_clicked_on_action(actions: Vec<Rectangle>, x: f32, y: f32) -> Option<Rectangle> {
     for i in 0..6 {
         if x >= actions[i].rect_obj.x
@@ -14,6 +16,7 @@ pub fn mouse_clicked_on_action(actions: Vec<Rectangle>, x: f32, y: f32) -> Optio
     return None;
 }
 
+// Determine on which tile we have clicked
 pub fn mouse_clicked_on_field(map: Vec<Row>, x: f32, y: f32) -> Option<Square> {
     // TODO make size of map+ 1
     let mut column = 20;
@@ -37,6 +40,7 @@ pub fn mouse_clicked_on_field(map: Vec<Row>, x: f32, y: f32) -> Option<Square> {
     Some(map[row][column].clone())
 }
 
+// Checking if we have it determines that we don't have teleporting units.
 pub fn player_owned(map: Vec<Position>, position: Position) -> bool {
     for e in map.iter() {
         if e == &position {
@@ -47,6 +51,7 @@ pub fn player_owned(map: Vec<Position>, position: Position) -> bool {
     return false;
 }
 
+// This is also needed for us to know that we don't have teleporting units.
 pub fn is_adjacent(to: Endpoint, from: Endpoint) -> bool {
     let mut is_adjacent = false;
     let mut eight_directions: Vec<Endpoint> = Vec::new();

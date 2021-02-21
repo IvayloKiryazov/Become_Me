@@ -2,6 +2,7 @@ use serde::Deserialize;
 use std::fs::File;
 use std::io::Read;
 
+// Permanent buffs
 #[derive(Deserialize, Clone, Debug)]
 pub struct Relics {
     pub name: String,
@@ -10,9 +11,9 @@ pub struct Relics {
     pub fertility: i32,
     pub diplomacy: i32,
     pub mastery: i32,
-    //pub has_been_found: bool,
 }
 
+// Just this turn.
 #[derive(Deserialize, Clone, Debug)]
 pub struct Expandable {
     pub name: String,
@@ -24,6 +25,7 @@ pub struct Expandable {
     pub mastery: i32,
 }
 
+// TODO: unify these two functions.
 pub fn read_expandables(path: String) -> Vec<Expandable> {
     let mut file = File::open(path).unwrap();
     let mut data = String::new();
